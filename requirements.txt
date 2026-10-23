@@ -1,0 +1,5 @@
+# Data validation & schemas
+pydantic>=2.8,<3
+
+# Unit & contract testing
+pytest>=8.3,<10
