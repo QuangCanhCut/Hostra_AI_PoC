@@ -1,0 +1,27 @@
+# Cấu hình gợi ý cho Comment Triage và Speech Scheduler của PoC.
+# Đây là cấu hình runtime; part1.py không đọc YAML và không xử lý queue.
+policy_version: policy_20261025
+
+duplicate:
+  scope: same_viewer_same_run
+  window_seconds: 30
+  normalize_whitespace: true
+  case_insensitive: true
+  preserve_vietnamese_accents: true
+
+deferred:
+  timeout_seconds: 30
+  timeout_origin: comment_received_at
+
+speech:
+  max_concurrent_playbacks: 1
+  non_preemptive: true
+  same_priority_order: fifo
+  # Giá trị mặc định được đề xuất; có thể thay khi benchmark scheduler.
+  sku_wait_timeout_seconds: 30
+  synthesize_only_when_selected: true
+  priority:
+    safe_fallback: 100
+    comment_reply_min: 60
+    comment_reply_max: 90
+    product_intro: 20
