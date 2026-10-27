@@ -1,0 +1,41 @@
+{
+  "license_data_version": "1.0",
+  "data_type": "mock",
+  "purpose": "Kiểm thử License Gate trong HOSTRA AI PoC. Không phải giấy phép pháp lý hoặc bằng chứng đồng ý của người thật.",
+  "run_id": "RUN-001",
+  "licenses": [
+    {
+      "license_ref": "LICENSE-001",
+      "avatar_id": "AVATAR-001",
+      "voice_id": "VOICE-001",
+      "creator_id": "CREATOR-DEMO-001",
+      "source_video_path": "shared_data/inputs/base_operator.mp4",
+      "source_video_ready": false,
+      "license_status": "mock_only",
+      "test_mode_accepted": true,
+      "real_consent_verified": false,
+      "real_consent_document": null,
+      "valid_from": null,
+      "valid_until": null,
+      "usage_scope": [
+        "offline_mock_tests",
+        "synthetic_media_demo"
+      ],
+      "permissions": {
+        "face_lipsync_real_media": false,
+        "voice_clone_real_person": false,
+        "publish_publicly": false,
+        "commercial_use": false
+      },
+      "notes": "Chỉ dùng để test đường đi của License Gate khi dữ liệu media là giả lập. Khi quay video có người thật, phải có sự đồng ý phù hợp trước khi lip-sync, sử dụng hoặc công bố."
+    }
+  ],
+  "integration_notes": {
+    "render_job_license_ref": "LICENSE-001",
+    "render_job_avatar_id": "AVATAR-001",
+    "audio_artifact_voice_id": "VOICE-001",
+    "mock_gate_behavior": "Chỉ cho phép vượt qua kiểm tra giả lập trong chế độ mock test; không được coi là license hợp lệ cho render media người thật.",
+    "real_media_gate_behavior": "Từ chối sử dụng media người thật nếu chưa xác minh quyền sử dụng phù hợp.",
+    "file_status": "Định dạng input đề xuất; nhóm Part 2 cần thống nhất logic đọc file vì chưa có schema Pydantic riêng cho creator_license.json."
+  }
+}

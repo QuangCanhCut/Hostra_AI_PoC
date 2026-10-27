@@ -1,0 +1,182 @@
+[
+  {
+    "comment_id": "CMT-001",
+    "run_id": "RUN-001",
+    "viewer_id": "VIEWER-01",
+    "source": "mock",
+    "text": "Shop ơi, ASUS Vivobook giá bao nhiêu ạ?",
+    "active_sku_id": "LAPTOP-ASUS-001",
+    "received_at": "2026-10-27T13:00:08Z"
+  },
+  {
+    "comment_id": "CMT-002",
+    "run_id": "RUN-001",
+    "viewer_id": "VIEWER-02",
+    "source": "mock",
+    "text": "Lenovo Xiaoxin 14 giá bao nhiêu vậy shop?",
+    "active_sku_id": "LAPTOP-ASUS-001",
+    "received_at": "2026-10-27T13:00:12Z"
+  },
+  {
+    "comment_id": "CMT-003",
+    "run_id": "RUN-001",
+    "viewer_id": "VIEWER-01",
+    "source": "mock",
+    "text": "Vậy máy này có nâng RAM lên 32GB được không?",
+    "active_sku_id": "LAPTOP-ASUS-001",
+    "received_at": "2026-10-27T13:00:17Z"
+  },
+  {
+    "comment_id": "CMT-004",
+    "run_id": "RUN-001",
+    "viewer_id": "VIEWER-03",
+    "source": "mock",
+    "text": "Em học IT, hay chạy Docker và máy ảo thì nên chọn máy nào?",
+    "active_sku_id": "LAPTOP-ASUS-001",
+    "received_at": "2026-10-27T13:00:21Z"
+  },
+  {
+    "comment_id": "CMT-005",
+    "run_id": "RUN-001",
+    "viewer_id": "VIEWER-01",
+    "source": "mock",
+    "text": "SHOP ƠI, ASUS VIVOBOOK GIÁ BAO NHIÊU Ạ?",
+    "active_sku_id": "LAPTOP-ASUS-001",
+    "received_at": "2026-10-27T13:00:26Z"
+  },
+  {
+    "comment_id": "CMT-006",
+    "run_id": "RUN-001",
+    "viewer_id": "VIEWER-02",
+    "source": "mock",
+    "text": "Vậy máy đó có nâng RAM và SSD được không?",
+    "active_sku_id": "LAPTOP-ASUS-001",
+    "received_at": "2026-10-27T13:00:32Z"
+  },
+  {
+    "comment_id": "CMT-007",
+    "run_id": "RUN-001",
+    "viewer_id": "VIEWER-04",
+    "source": "mock",
+    "text": "ASUS dùng màn OLED 2.8K 120Hz đúng không shop?",
+    "active_sku_id": "LAPTOP-ASUS-001",
+    "received_at": "2026-10-27T13:00:38Z"
+  },
+  {
+    "comment_id": "CMT-008",
+    "run_id": "RUN-001",
+    "viewer_id": "VIEWER-03",
+    "source": "mock",
+    "text": "Nếu em muốn nâng RAM lên 32GB sau này thì sao?",
+    "active_sku_id": "LAPTOP-ASUS-001",
+    "received_at": "2026-10-27T13:00:44Z"
+  },
+  {
+    "comment_id": "CMT-009",
+    "run_id": "RUN-001",
+    "viewer_id": "VIEWER-04",
+    "source": "mock",
+    "text": "Thế màn hình ASUS lợi thế gì khi em chỉnh ảnh so với Lenovo?",
+    "active_sku_id": "LAPTOP-ASUS-001",
+    "received_at": "2026-10-27T13:00:50Z"
+  },
+  {
+    "comment_id": "CMT-010",
+    "run_id": "RUN-001",
+    "viewer_id": "VIEWER-02",
+    "source": "mock",
+    "text": "Thế so với ASUS thì giá chênh nhau bao nhiêu?",
+    "active_sku_id": "LAPTOP-ASUS-001",
+    "received_at": "2026-10-27T13:00:56Z"
+  },
+  {
+    "comment_id": "CMT-011",
+    "run_id": "RUN-001",
+    "viewer_id": "VIEWER-05",
+    "source": "mock",
+    "text": "Lenovo chơi Valorant chắc được 200 FPS nhỉ?",
+    "active_sku_id": "LAPTOP-ASUS-001",
+    "received_at": "2026-10-27T13:01:02Z"
+  },
+  {
+    "comment_id": "CMT-012",
+    "run_id": "RUN-001",
+    "viewer_id": "VIEWER-05",
+    "source": "mock",
+    "text": "Nếu chưa có benchmark thì shop có cam kết FPS được không?",
+    "active_sku_id": "LAPTOP-ASUS-001",
+    "received_at": "2026-10-27T13:01:08Z"
+  },
+  {
+    "comment_id": "CMT-013",
+    "run_id": "RUN-001",
+    "viewer_id": "VIEWER-06",
+    "source": "mock",
+    "text": "ASUS giảm thêm 2 triệu được không shop?",
+    "active_sku_id": "LAPTOP-ASUS-001",
+    "received_at": "2026-10-27T13:01:14Z"
+  },
+  {
+    "comment_id": "CMT-014",
+    "run_id": "RUN-001",
+    "viewer_id": "VIEWER-06",
+    "source": "mock",
+    "text": "Thế shop có trả góp 0% không?",
+    "active_sku_id": "LAPTOP-ASUS-001",
+    "received_at": "2026-10-27T13:01:20Z"
+  },
+  {
+    "comment_id": "CMT-015",
+    "run_id": "RUN-001",
+    "viewer_id": "VIEWER-07",
+    "source": "mock",
+    "text": "AAAAA SPAM SPAM SPAM MUA ĐI MUA ĐI!!!",
+    "active_sku_id": "LAPTOP-ASUS-001",
+    "received_at": "2026-10-27T13:01:26Z"
+  },
+  {
+    "comment_id": "CMT-016",
+    "run_id": "RUN-001",
+    "viewer_id": "VIEWER-08",
+    "source": "mock",
+    "text": "Cầu thủ nào ghi nhiều bàn nhất mùa này vậy?",
+    "active_sku_id": "LAPTOP-ASUS-001",
+    "received_at": "2026-10-27T13:01:32Z"
+  },
+  {
+    "comment_id": "CMT-017",
+    "run_id": "RUN-001",
+    "viewer_id": "VIEWER-03",
+    "source": "mock",
+    "text": "Vậy với nhu cầu học IT và chạy máy ảo của em, chốt lại nên mua máy nào?",
+    "active_sku_id": "LAPTOP-ASUS-001",
+    "received_at": "2026-10-27T13:01:38Z"
+  },
+  {
+    "comment_id": "CMT-018",
+    "run_id": "RUN-001",
+    "viewer_id": "VIEWER-06",
+    "source": "mock",
+    "text": "Nếu không có ưu đãi thêm thì mình vẫn muốn đặt ASUS; đặt thế nào?",
+    "active_sku_id": "LAPTOP-ASUS-001",
+    "received_at": "2026-10-27T13:01:43Z"
+  },
+  {
+    "comment_id": "CMT-019",
+    "run_id": "RUN-001",
+    "viewer_id": "VIEWER-04",
+    "source": "mock",
+    "text": "ASUS pin 75Wh thì chắc chắn dùng được 12 tiếng đúng không?",
+    "active_sku_id": "LAPTOP-ASUS-001",
+    "received_at": "2026-10-27T13:01:49Z"
+  },
+  {
+    "comment_id": "CMT-020",
+    "run_id": "RUN-001",
+    "viewer_id": "VIEWER-02",
+    "source": "mock",
+    "text": "Sao giá Lenovo website khác giá shop báo trong buổi demo?",
+    "active_sku_id": "LAPTOP-ASUS-001",
+    "received_at": "2026-10-27T13:01:55Z"
+  }
+]
