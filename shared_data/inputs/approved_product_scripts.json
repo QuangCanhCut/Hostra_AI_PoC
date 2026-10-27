@@ -1,0 +1,256 @@
+{
+  "script_collection_version": "1.0",
+  "data_type": "mock",
+  "language": "vi-VN",
+  "status": "pending_team_review",
+  "scope": {
+    "run_id": "RUN-001",
+    "active_sku_id": "LAPTOP-ASUS-001",
+    "catalog_path": "shared_data/inputs/catalog_skus.json",
+    "faq_path": "shared_data/inputs/product_faq.md"
+  },
+  "integration_notes": {
+    "format_status": "proposed_input_format_not_a_pydantic_contract",
+    "script_ref_rule": "SpeechTurn.script_ref must equal an existing scripts[].script_id.",
+    "speech_type_rule": "Only product_intro and safe_fallback belong to this library; comment_reply is produced from a verified AgentResponse.",
+    "activation_rule": "Product-intro scripts require sku_id matching the current active SKU; Lenovo scripts are stored but not auto-played in RUN-001.",
+    "approval_rule": "Before use, the team reviews a script and updates approval.status to approved, with approved_by and approved_at; until then it is draft content.",
+    "scheduling_rule": "This file does not fix speech times or guarantee all scripts will be played; the service/scheduler chooses speech turns and checks available time.",
+    "revalidation_rule": "If catalog or FAQ changes, recheck any scripts making factual claims, including demo prices."
+  },
+  "scripts": [
+    {
+      "script_id": "SCRIPT-ASUS-001",
+      "sku_id": "LAPTOP-ASUS-001",
+      "speech_type": "product_intro",
+      "category": "welcome",
+      "text": "Xin chào mọi người! Hôm nay mình cùng tìm hiểu ASUS Vivobook S 14 OLED, chiếc laptop mỏng nhẹ dành cho học tập và làm việc nhé!",
+      "evidence_refs": [
+        "catalog:LAPTOP-ASUS-001"
+      ],
+      "use_when": "Mở đầu phiên khi ASUS đang là active SKU.",
+      "approval": {
+        "status": "pending_review",
+        "approved_by": null,
+        "approved_at": null
+      }
+    },
+    {
+      "script_id": "SCRIPT-ASUS-002",
+      "sku_id": "LAPTOP-ASUS-001",
+      "speech_type": "product_intro",
+      "category": "spec_highlight",
+      "text": "ASUS có chip Intel Core Ultra 5 125H, RAM 16GB và SSD 1TB. Đặc biệt, màn hình OLED 2.8K, 120Hz rất đáng chú ý.",
+      "evidence_refs": [
+        "catalog:LAPTOP-ASUS-001",
+        "faq:FAQ-ASUS-002",
+        "faq:FAQ-ASUS-003"
+      ],
+      "use_when": "Giới thiệu điểm nổi bật của ASUS khi không có lượt trả lời bình luận ưu tiên.",
+      "approval": {
+        "status": "pending_review",
+        "approved_by": null,
+        "approved_at": null
+      }
+    },
+    {
+      "script_id": "SCRIPT-ASUS-003",
+      "sku_id": "LAPTOP-ASUS-001",
+      "speech_type": "product_intro",
+      "category": "price_demo",
+      "text": "Trong phiên demo HOSTRA, ASUS có giá 26 triệu 500 nghìn đồng. Đây là giá giả lập để thử hệ thống, chưa phải báo giá bán hàng thực tế nhé!",
+      "evidence_refs": [
+        "catalog:LAPTOP-ASUS-001",
+        "faq:FAQ-ASUS-001"
+      ],
+      "use_when": "Chỉ dùng khi giá trong Catalog vẫn là 26.500.000 đồng; không dùng như báo giá ngoài đời.",
+      "approval": {
+        "status": "pending_review",
+        "approved_by": null,
+        "approved_at": null
+      }
+    },
+    {
+      "script_id": "SCRIPT-ASUS-004",
+      "sku_id": "LAPTOP-ASUS-001",
+      "speech_type": "product_intro",
+      "category": "comparison_teaser",
+      "text": "Nếu cần màn hình OLED và SSD 1TB sẵn có, bạn hãy xem ASUS. Còn Lenovo là lựa chọn đáng cân nhắc nếu muốn nâng cấp RAM sau này.",
+      "evidence_refs": [
+        "catalog:LAPTOP-ASUS-001",
+        "catalog:LAPTOP-LENOVO-002",
+        "faq:FAQ-COMPARE-003",
+        "faq:FAQ-COMPARE-004"
+      ],
+      "use_when": "Nêu khác biệt có bằng chứng giữa hai mẫu, trong lúc ASUS đang là active SKU.",
+      "approval": {
+        "status": "pending_review",
+        "approved_by": null,
+        "approved_at": null
+      }
+    },
+    {
+      "script_id": "SCRIPT-LENOVO-001",
+      "sku_id": "LAPTOP-LENOVO-002",
+      "speech_type": "product_intro",
+      "category": "welcome",
+      "text": "Tiếp theo là Lenovo IdeaPad Slim 5 Xiaoxin 14, cấu hình Ryzen 7 H 255, RAM 16GB, SSD 512GB và màn hình 120Hz nhé!",
+      "evidence_refs": [
+        "catalog:LAPTOP-LENOVO-002"
+      ],
+      "use_when": "Chỉ dùng khi Lenovo là active SKU; không tự phát ở RUN-001 vì RUN-001 có active SKU là ASUS.",
+      "approval": {
+        "status": "pending_review",
+        "approved_by": null,
+        "approved_at": null
+      }
+    },
+    {
+      "script_id": "SCRIPT-LENOVO-002",
+      "sku_id": "LAPTOP-LENOVO-002",
+      "speech_type": "product_intro",
+      "category": "spec_highlight",
+      "text": "Điểm đáng chú ý ở Lenovo là RAM 16GB DDR5 có hỗ trợ nâng cấp. Ổ SSD 512GB cũng được ghi nhận hỗ trợ nâng cấp theo Catalog.",
+      "evidence_refs": [
+        "catalog:LAPTOP-LENOVO-002",
+        "faq:FAQ-LENOVO-003",
+        "faq:FAQ-LENOVO-004"
+      ],
+      "use_when": "Chỉ dùng khi Lenovo là active SKU và thông số chưa thay đổi.",
+      "approval": {
+        "status": "pending_review",
+        "approved_by": null,
+        "approved_at": null
+      }
+    },
+    {
+      "script_id": "SCRIPT-LENOVO-003",
+      "sku_id": "LAPTOP-LENOVO-002",
+      "speech_type": "product_intro",
+      "category": "price_demo",
+      "text": "Giá Lenovo trong phiên demo HOSTRA là 25 triệu 690 nghìn đồng. Đây là mức giá giả lập, không thay thế giá niêm yết hiện tại của cửa hàng.",
+      "evidence_refs": [
+        "catalog:LAPTOP-LENOVO-002",
+        "faq:FAQ-LENOVO-001"
+      ],
+      "use_when": "Chỉ dùng khi Lenovo là active SKU và giá demo trong Catalog vẫn giữ nguyên.",
+      "approval": {
+        "status": "pending_review",
+        "approved_by": null,
+        "approved_at": null
+      }
+    },
+    {
+      "script_id": "SCRIPT-FALLBACK-001",
+      "sku_id": null,
+      "speech_type": "safe_fallback",
+      "category": "missing_evidence",
+      "text": "Dạ, thông tin này hiện chưa có nguồn xác minh rõ ràng trong hệ thống. Mình xin kiểm tra thêm trước khi trả lời chính xác nhé!",
+      "evidence_refs": [],
+      "use_when": "Agent không xác minh được câu trả lời; không đọc câu trả lời bị chặn.",
+      "approval": {
+        "status": "pending_review",
+        "approved_by": null,
+        "approved_at": null
+      }
+    },
+    {
+      "script_id": "SCRIPT-FALLBACK-002",
+      "sku_id": null,
+      "speech_type": "safe_fallback",
+      "category": "benchmark_unavailable",
+      "text": "Mình chưa có kết quả kiểm thử thực tế trong cùng điều kiện, nên chưa thể cam kết số FPS hoặc thời lượng pin cụ thể ạ.",
+      "evidence_refs": [],
+      "use_when": "Khách yêu cầu FPS, benchmark hoặc số giờ pin khi chưa có phép đo.",
+      "approval": {
+        "status": "pending_review",
+        "approved_by": null,
+        "approved_at": null
+      }
+    },
+    {
+      "script_id": "SCRIPT-FALLBACK-003",
+      "sku_id": null,
+      "speech_type": "safe_fallback",
+      "category": "promotion_unverified",
+      "text": "Dạ, phiên demo hiện chưa xác nhận chính sách giảm giá, trả góp hoặc quà tặng. Mình không muốn hứa trước khi có thông tin chính thức ạ.",
+      "evidence_refs": [],
+      "use_when": "Khách hỏi giảm giá, trả góp, freeship, quà tặng nhưng chưa có chính sách.",
+      "approval": {
+        "status": "pending_review",
+        "approved_by": null,
+        "approved_at": null
+      }
+    },
+    {
+      "script_id": "SCRIPT-FALLBACK-004",
+      "sku_id": null,
+      "speech_type": "safe_fallback",
+      "category": "product_ambiguous",
+      "text": "Bạn đang muốn hỏi ASUS Vivobook S 14 hay Lenovo Xiaoxin 14 ạ? Mình xin xác nhận đúng mẫu để tư vấn không bị nhầm nhé!",
+      "evidence_refs": [],
+      "use_when": "Chỉ dùng khi service thực sự không xác định được mẫu và chọn phát fallback; ưu tiên AgentResponse clarification_needed nếu có.",
+      "approval": {
+        "status": "pending_review",
+        "approved_by": null,
+        "approved_at": null
+      }
+    },
+    {
+      "script_id": "SCRIPT-FALLBACK-005",
+      "sku_id": null,
+      "speech_type": "safe_fallback",
+      "category": "order_not_supported",
+      "text": "Cảm ơn bạn đã quan tâm! Đây là phiên demo tư vấn laptop nên hệ thống chưa tạo đơn hàng hay xử lý thanh toán thật được ạ.",
+      "evidence_refs": [],
+      "use_when": "Khách yêu cầu tạo đơn hoặc thanh toán; không khẳng định đã chốt đơn thành công.",
+      "approval": {
+        "status": "pending_review",
+        "approved_by": null,
+        "approved_at": null
+      }
+    },
+    {
+      "script_id": "SCRIPT-FALLBACK-006",
+      "sku_id": null,
+      "speech_type": "safe_fallback",
+      "category": "price_source_mismatch",
+      "text": "Giá mình nêu là giá cố định dành riêng cho phiên demo HOSTRA. Giá trên website có thể khác và cần được xác nhận lại khi mua thật ạ.",
+      "evidence_refs": [],
+      "use_when": "Khách hỏi tại sao giá trong demo khác trên website; chỉ phát theo chính sách fallback được duyệt.",
+      "approval": {
+        "status": "pending_review",
+        "approved_by": null,
+        "approved_at": null
+      }
+    },
+    {
+      "script_id": "SCRIPT-FALLBACK-007",
+      "sku_id": null,
+      "speech_type": "safe_fallback",
+      "category": "system_unavailable",
+      "text": "Xin lỗi bạn, hệ thống đang chưa tra cứu được thông tin đáng tin cậy. Mình sẽ chỉ trả lời sau khi kiểm tra lại dữ liệu nhé!",
+      "evidence_refs": [],
+      "use_when": "Catalog không sẵn sàng hoặc lỗi nội bộ; không trả lời dựa trên dữ liệu chưa xác minh.",
+      "approval": {
+        "status": "pending_review",
+        "approved_by": null,
+        "approved_at": null
+      }
+    },
+    {
+      "script_id": "SCRIPT-FALLBACK-008",
+      "sku_id": null,
+      "speech_type": "safe_fallback",
+      "category": "off_topic",
+      "text": "Phiên này mình đang hỗ trợ tư vấn hai mẫu laptop ASUS và Lenovo. Bạn muốn tìm hiểu cấu hình, giá demo hay so sánh hai mẫu ạ?",
+      "evidence_refs": [],
+      "use_when": "Chỉ dùng nếu policy quyết định phản hồi. Bình luận spam hoặc ngoài chủ đề bị skipped thì không phát TTS.",
+      "approval": {
+        "status": "pending_review",
+        "approved_by": null,
+        "approved_at": null
+      }
+    }
+  ]
+}
