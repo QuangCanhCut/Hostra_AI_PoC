@@ -1,0 +1,16 @@
+
+llm:
+  provider: openai
+  model: gpt-6.1-terra
+  reasoning_effort: low
+
+rag:
+  embedding_model: text-embedding-3-small
+
+verification:
+  deterministic_checks: true
+
+tts:
+  provider: openai
+  model: gpt-4o-mini-tts
+  output_format: wav

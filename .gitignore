@@ -6,6 +6,7 @@ venv/
 
 # Testing and linting
 .pytest_cache/
+.pytest-temp/
 .ruff_cache/
 .coverage
 htmlcov/
