@@ -6,6 +6,7 @@ venv/
 
 # Testing and linting
 .pytest_cache/
+.pytest-temp/
 .ruff_cache/
 .coverage
 htmlcov/
@@ -20,6 +21,8 @@ htmlcov/
 
 # Generated artifacts
 shared_data/runs/
+shared_data/indexes/
+/shared_data/tts_previews/
 
 # Local video inputs and model weights
 shared_data/inputs/*.mp4

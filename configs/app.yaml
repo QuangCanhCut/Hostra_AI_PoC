@@ -1,0 +1,21 @@
+
+llm:
+  provider: openai
+  model: gpt-6.1-terra
+  reasoning_effort: low
+
+rag:
+  embedding_model: text-embedding-3-small
+
+verification:
+  deterministic_checks: true
+
+tts:
+  provider: openai
+  model: gpt-4o-mini-tts
+  output_format: wav
+  voice: alloy
+  sample_rate_hz: 16000
+  speed: 1.0
+  timeout_seconds: 30.0
+  live_api_opt_in: false

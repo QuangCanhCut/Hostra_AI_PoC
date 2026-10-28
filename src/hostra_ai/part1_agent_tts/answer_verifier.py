@@ -1,0 +1,177 @@
+"""
+M03 - Kiểm tra câu trả lời ứng viên trước khi công bố cho người xem.
+
+Đầu vào gồm candidate từ provider, SKU đã phân giải và EvidencePackage của
+Knowledge Engine. Kết quả chỉ là True/False; VerifiedAgent chịu trách nhiệm
+đổi False thành AgentResponse bị chặn và không công bố nội dung ứng viên.
+
+Verifier hiện chỉ hiểu một tập mẫu câu catalog và trích đoạn FAQ giới hạn.
+Nó không chứng minh được nội dung tiếng Việt bất kỳ do LLM tạo ra; câu ngoài
+phạm vi được hỗ trợ sẽ bị từ chối dù có thể đúng. Không xem citation đơn lẻ
+là bằng chứng rằng toàn bộ nội dung câu trả lời đã được kiểm chứng.
+"""
+from dataclasses import dataclass
+import re
+
+from .knowledge.models import EvidencePackage
+
+_SAFE_FOLLOWUPS = {
+    'price_inquiry': frozenset({'bạn muốn mình tư vấn thêm về cấu hình của mẫu này không ạ?'}),
+    'comparison': frozenset({'bạn muốn tìm hiểu thêm về cấu hình của hai mẫu không ạ?'}),
+    'advisory': frozenset({'bạn ưu tiên màn hình hay khả năng nâng cấp về sau ạ?'}),
+    'spec_inquiry': frozenset({'bạn muốn tìm hiểu thêm về nhu cầu sử dụng nào không ạ?'}),
+}
+
+
+# ============================================================
+# 1. CÂU TRẢ LỜI ỨNG VIÊN - CHƯA PHẢI KẾT QUẢ ĐÃ XÁC MINH
+# ============================================================
+
+@dataclass(frozen=True)
+class CandidateAnswer:
+    """
+    Dữ liệu nội bộ do provider đề xuất, chưa phải AgentResponse hợp lệ.
+
+    ``claimed_sku_ids`` xác định phạm vi sản phẩm; ``cited_evidence_refs``
+    chứa nguồn catalog/FAQ; ``claims`` là các chuỗi phải xuất hiện trong câu.
+    Việc chuỗi claim xuất hiện không tự chứng minh claim đó là đúng.
+    """
+    answer_text: str
+    claimed_sku_ids: tuple[str, ...]
+    cited_evidence_refs: tuple[str, ...]
+    claims: tuple[str, ...] = ()
+
+
+# ============================================================
+# 2. KIỂM TRA EVIDENCE VÀ CÁC MỆNH ĐỀ ĐƯỢC HỖ TRỢ
+# ============================================================
+
+class AnswerVerifier:
+    """
+    Đối chiếu evidence và từng mệnh đề theo các quy tắc xác định, bảo thủ.
+
+    Chỉ chấp nhận khi mọi mệnh đề nằm trong phạm vi kiểm tra hiện có. Cần
+    mở rộng quy tắc và test khi bổ sung cách diễn đạt hoặc loại fact mới.
+    """
+    def verify(self, candidate: CandidateAnswer, evidence: EvidencePackage,
+               resolved_sku_ids: tuple[str, ...], intent: str) -> bool:
+        """
+        Kiểm tra candidate và trả True nếu tất cả điều kiện hiện có đều đạt.
+
+        Yêu cầu catalog đầy đủ cho từng SKU, citation không trùng và FAQ được
+        trích phải có trong package, không mang cờ needs_review. Tham số
+        ``intent`` hiện được giữ trong giao diện nhưng chưa được dùng để kiểm
+        tra sự phù hợp giữa nội dung câu trả lời và câu hỏi.
+        """
+        if not isinstance(candidate, CandidateAnswer) or not resolved_sku_ids:
+            return False
+        if candidate.claimed_sku_ids != resolved_sku_ids or not candidate.answer_text.strip():
+            return False
+        refs = candidate.cited_evidence_refs
+        if not refs or len(refs) > 10 or len(set(refs)) != len(refs):
+            return False
+        products = {e.sku_id: e.value for e in evidence.catalog_evidence
+                    if e.field_path is None and isinstance(e.value, dict)
+                    and e.source_ref == f"catalog:{e.sku_id}"}
+        required = {f"catalog:{sku}" for sku in resolved_sku_ids}
+        if not required.issubset(refs) or any(sku not in products for sku in resolved_sku_ids):
+            return False
+        hits = {h.source_ref: h for h in evidence.faq_hits
+                if h.source_ref == f"faq:{h.metadata.get('faq_id')}"}
+        for ref in refs:
+            if ref in required:
+                continue
+            hit = hits.get(ref)
+            if hit is None or hit.metadata.get("needs_review") is not False:
+                return False
+        if any(not isinstance(c, str) or c not in candidate.answer_text for c in candidate.claims):
+            return False
+
+        text = candidate.answer_text.strip()
+        # Tách các mệnh đề để kiểm tra riêng; tránh tách dấu chấm trong số.
+        clauses = [s.strip(" ,;.") for s in re.split(r"[;\n]|(?<!\d)\.(?=\s|$)", text) if s.strip(" ,;.")]
+        if not clauses:
+            return False
+        if all(' '.join(clause.casefold().split()) in _SAFE_FOLLOWUPS.get(intent, ()) for clause in clauses):
+            return False
+        for clause in clauses:
+            if not self._check_clause(clause, products, resolved_sku_ids, refs, hits, intent):
+                return False
+        return True
+
+    @staticmethod
+    def _check_clause(clause, products, skus, refs, hits, intent):
+        """
+        Kiểm tra một mệnh đề sau chuẩn hóa chữ hoa/thường và khoảng trắng.
+
+        FAQ chỉ đóng góp một số trích đoạn cụ thể. Fact thương mại và thông số
+        được so với catalog theo SKU; các câu khác mặc định bị từ chối.
+        """
+        t = " ".join(clause.casefold().split())
+        # These exact conversational sentences contain no product claims.
+        # Any additional wording remains subject to the factual checks below.
+        if t in _SAFE_FOLLOWUPS.get(intent, ()):
+            return True
+        # Chỉ chấp nhận mẫu từ chối cam kết đầy đủ; chặn các cam kết chưa hỗ trợ.
+        if re.fullmatch(r"(?:em |mình )?chưa thể cam kết (?:số )?fps hoặc (?:số giờ|thời lượng) pin", t):
+            return True
+        if re.search(r"\bfps\b|\b\d+\s*(?:tiếng|giờ)\b|trả góp|khuyến mãi|freeship|đã (?:lên|chốt|đặt) đơn", t):
+            return False
+
+        if t == "giá em vừa nêu là giá được cấu hình cho phiên demo hostra, không phải giá cập nhật trực tiếp từ trang bán hàng":
+            return any(ref in hits and hits[ref].metadata.get('faq_id') == 'FAQ-SALES-005'
+                       and t in hits[ref].retrieval_text.replace('**', '').casefold() for ref in refs)
+
+        # Chỉ nhận các trích đoạn FAQ được cho phép và xuất hiện trong phần trả lời.
+        # Số liệu hoặc khẳng định thương mại cần đối chiếu catalog ở bước sau.
+        if not re.search(r"\d|\b(?:giá|ram|ssd|pin|oled|ips|bảo hành|nâng cấp|hàng|giảm)\b", t):
+            for ref in refs:
+                if ref not in hits:
+                    continue
+                lines = hits[ref].retrieval_text.splitlines()
+                allowed = ("chưa có benchmark cùng điều kiện nên em không kết luận máy nào chạy code nhanh hơn toàn diện",
+                           "với công việc đồ họa chuyên sâu, nên xem yêu cầu phần mềm cụ thể trước khi quyết định")
+                if t in allowed and len(lines) >= 3 and t in lines[-1].replace("**", "").casefold():
+                    return True
+
+        for sku in skus:
+            p = products[sku]
+            name = str(p.get("brand", "")).casefold()
+            if not name or not re.search(rf"\b{re.escape(name)}\b", t):
+                continue
+            # Mệnh đề chứa hai tên sản phẩm chỉ được xử lý ở nhánh chênh lệch giá.
+            if any(other != sku and re.search(rf"\b{re.escape(str(products[other]['brand']).casefold())}\b", t) for other in skus):
+                continue
+            price = f"{p['price_vnd']:,}".replace(",", ".")
+            if re.fullmatch(rf"(?:giá\s+)?{re.escape(name)}(?:\s+trong phiên demo hostra)?(?:\s*:\s*|\s+(?:là|có giá)\s+){re.escape(price)}\s*(?:đồng|vnđ)(?:\s+trong phiên demo hostra)?", t):
+                return "demo hostra" in t
+            if re.fullmatch(rf"{re.escape(name)}\s*:\s*{p['stock_quantity']}\s+máy\s+trong phiên demo hostra", t):
+                return True
+            for field, label in (("ram", "ram"), ("storage", "ssd")):
+                value = p["specifications"][field]["upgradable"]
+                # None là chưa xác nhận, không đồng nghĩa với không nâng cấp được.
+                expected = "chưa xác nhận khả năng nâng cấp" if value is None else "có thể nâng cấp" if value else "không thể nâng cấp"
+                if t in (f"{name}: {label} {expected}", f"về {name}, {label} {expected}"):
+                    return True
+            display = p["specifications"]["display"]
+            if display.get("panel") is not None and t == f"{name}: màn hình {display['panel'].casefold()}, {display['refresh_rate_hz']}hz":
+                return True
+            if display.get("panel") is not None and t == f"{name} có màn hình {display['panel'].casefold()}, tần số quét {display['refresh_rate_hz']}hz":
+                return True
+            if display.get("panel") is None and t == f"{name}: chưa xác nhận tấm nền màn hình":
+                return True
+            if t in (f"{name}: pin {p['specifications']['battery_wh']}wh", f"{name} có pin {p['specifications']['battery_wh']}wh"):
+                return True
+            if t in (f"{name}: ram {p['specifications']['ram']['capacity_gb']}gb", f"{name} có ram {p['specifications']['ram']['capacity_gb']}gb"):
+                return True
+            if t in (f"{name}: ssd {p['specifications']['storage']['capacity_label'].casefold()}", f"{name} có ssd {p['specifications']['storage']['capacity_label'].casefold()}"):
+                return True
+            if t in (f"{name}: cpu {p['specifications']['cpu']['model'].casefold()}", f"{name} có cpu {p['specifications']['cpu']['model'].casefold()}"):
+                return True
+        if len(skus) == 2:
+            a, b = (products[sku] for sku in skus)
+            cheaper, dearer = sorted((a, b), key=lambda p: p['price_vnd'])
+            diff = f"{dearer['price_vnd'] - cheaper['price_vnd']:,}".replace(",", ".")
+            if t == f"{cheaper['brand'].casefold()} rẻ hơn {dearer['brand'].casefold()} {diff} đồng trong phiên demo hostra":
+                return True
+        return False

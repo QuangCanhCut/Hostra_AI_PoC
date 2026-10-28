@@ -13,6 +13,20 @@ deferred:
   timeout_seconds: 30
   timeout_origin: comment_received_at
 
+# Điểm cộng theo nhóm ý định; có thể cộng nhiều nhóm, tối đa 100.
+scoring:
+  base: 20
+  price: 25
+  technical: 25
+  comparison: 30
+  advice: 25
+  purchase: 35
+  follow_up: 10
+
+queue:
+  max_size: 5
+  max_consecutive_per_viewer: 2
+
 speech:
   max_concurrent_playbacks: 1
   non_preemptive: true

@@ -8,6 +8,8 @@ Repository này phục vụ việc phát triển **Proof of Concept (PoC)** nh�
 
 > **Trạng thái cập nhật: 25/10/2026 — Contract-first development.** Nhóm đã hoàn thành thiết kế, hiện thực và kiểm thử Data Contract bằng Pydantic cho cả ba Part (10 schema), cập nhật tài liệu liên quan và merge lên `main`. Các runtime services, workers, API, Web UI và pipeline end-to-end **chưa được triển khai hoặc xác nhận hoạt động**.
 
+Milestone 01 bổ sung xử lý bình luận offline trong Part 1. Xem [hướng dẫn Comment Processing](docs/milestone01_comment_processing.md) để chạy demo, kiểm thử và tìm hiểu các giả định.
+
 ## 1. Project Overview
 
 Trong hoạt động bán hàng qua livestream/video, người dẫn thường phải đồng thời thao tác sản phẩm, trình bày, đọc bình luận và tư vấn. HOSTRA AI nghiên cứu cách tách hai vai trò:

@@ -1,26 +1,38 @@
 # HOSTRA AI PoC — Tài liệu chú thích cấu trúc Project
 
+
 **Project:** HOSTRA AI — Hybrid AI Live Commerce Proof of Concept
+
 
 **Repository:** https://github.com/QuangCanhCut/Hostra_AI_PoC
 
+
 **Công nghệ:** Python, Pydantic v2, LLM, RAG, TTS, Lip-sync, FFmpeg, FastAPI, HTML/CSS/JS, Pytest
+
 
 **Giai đoạn:** Proof of Concept (PoC)
 
-**Phiên bản tài liệu:** V2.0
 
-**Ngày cập nhật:** 24/10/2026
+**Phiên bản tài liệu:** V2.1 — Modular Knowledge Engine / RAG
 
-**Trạng thái:** Kiến trúc đề xuất đã review, triển khai từng module theo backlog.
+
+**Ngày cập nhật:** 28/10/2026
+
+
+**Trạng thái:** M01 đã nghiệm thu chức năng qua kiểm thử local; M02 (Knowledge Engine & RAG) đang thiết kế. Các file ghi "dự kiến" trong cây thư mục chưa được xác nhận tồn tại hoặc hoàn thiện.
+
 
 ---
 
+
 # 1. MỤC ĐÍCH TÀI LIỆU
+
 
 Tài liệu mô tả cấu trúc thư mục, vai trò của từng module, dữ liệu đầu vào (Input), dữ liệu đầu ra (Output) và mối quan hệ giữa các thành phần của dự án HOSTRA AI PoC.
 
+
 Tài liệu phục vụ các mục tiêu:
+
 
 1. Giúp các thành viên hiểu kiến trúc tổng thể trước khi lập trình.
 2. Xác định trách nhiệm và phạm vi xử lý của từng module.
@@ -30,21 +42,30 @@ Tài liệu phục vụ các mục tiêu:
 6. Cung cấp tài liệu tham chiếu khi review code và Pull Request.
 7. Đảm bảo kiến trúc phục vụ đúng đầu ra cuối cùng của PoC.
 
+
 ## 1.1. Phạm vi tài liệu
+
 
 Tài liệu tập trung vào kiến trúc và cấu trúc repository.
 
+
 Chi tiết field, Enum, validator và các quy tắc của Pydantic schemas được quản lý trong:
+
 
 `docs/data_contract_vi.md`
 
+
 Chi tiết sơ đồ kiến trúc và tương tác giữa các thành phần được quản lý trong:
+
 
 `docs/architecture.md`
 
+
 ## 1.2. Nguyên tắc thiết kế
 
+
 HOSTRA AI PoC áp dụng các nguyên tắc:
+
 
 - Contract First: Thống nhất dữ liệu trước khi tích hợp.
 - Modular Development: Chia hệ thống thành các module có trách nhiệm rõ ràng.
@@ -53,19 +74,27 @@ HOSTRA AI PoC áp dụng các nguyên tắc:
 - Reproducibility: Một lần chạy có thể truy vết cấu hình, nguồn dữ liệu và kết quả.
 - Offline-first PoC: Ưu tiên chứng minh pipeline offline trước khi triển khai realtime.
 
+
 **Lưu ý:** Một số file trong tài liệu là thành phần dự kiến, chưa phải tất cả đều đã được triển khai. Nhóm chỉ tạo file khi bắt đầu task tương ứng và cập nhật tài liệu theo implementation thực tế.
+
 
 ---
 
+
 # 2. ĐẦU RA MỤC TIÊU CỦA PROJECT
+
 
 ## 2.1. Mô tả sản phẩm demo
 
+
 HOSTRA AI PoC mô phỏng một phiên livestream bán hàng bằng AI.
+
 
 Hệ thống sử dụng một video nền quay sẵn người thật đang cầm và thao tác với sản phẩm.
 
+
 AI có khả năng:
+
 
 1. Chủ động giới thiệu sản phẩm khi chưa có bình luận.
 2. Nhận các bình luận khách hàng được mô phỏng.
@@ -76,13 +105,18 @@ AI có khả năng:
 7. Đồng bộ khẩu hình người trong video với giọng AI.
 8. Tiếp tục giới thiệu hoặc trả lời các bình luận tiếp theo.
 
+
 ## 2.2. Yêu cầu đặc biệt về video
+
 
 Video cuối cùng phải sử dụng một video nền liên tục.
 
+
 Không xây dựng video cuối bằng cách nối nhiều cảnh quay độc lập.
 
+
 Thay vào đó:
+
 
 - `base_operator.mp4` là nguồn hình ảnh chính xuyên suốt.
 - Hình ảnh người bán, sản phẩm và bối cảnh phải liên tục theo timeline gốc.
@@ -91,13 +125,18 @@ Thay vào đó:
 - Âm thanh được đồng bộ theo timeline.
 - Bình luận xuất hiện đúng thời điểm được định nghĩa trong kịch bản.
 
+
 Part 2 được phép tạo các video artifact trung gian để xử lý lip-sync.
+
 
 Tuy nhiên, các artifact này phải được căn chỉnh với video nền và không được xem là các cảnh quay độc lập để nối tuần tự.
 
+
 ## 2.3. Đầu ra cuối cùng
 
+
 Một lần chạy thành công tạo ra:
+
 
 | Output | Nội dung |
 |---|---|
@@ -113,9 +152,12 @@ Một lần chạy thành công tạo ra:
 | audit_log.json | Nhật ký xử lý |
 | benchmark.json | Kết quả đo hiệu năng thực tế |
 
+
 ## 2.4. Những chức năng ngoài phạm vi PoC
 
+
 Phiên bản PoC chưa yêu cầu:
+
 
 - Phát livestream thực tế lên TikTok hoặc Shopee.
 - Xử lý video và lip-sync thời gian thực hoàn chỉnh.
@@ -125,164 +167,106 @@ Phiên bản PoC chưa yêu cầu:
 - Marketplace cấp phép avatar hoàn chỉnh.
 - Hệ thống thanh toán hoặc xử lý đơn hàng thật.
 
+
 Các chức năng này thuộc các giai đoạn MVP và phát triển sản phẩm sau PoC.
 
+
 ---
+
 
 # 3. TỔNG QUAN KIẾN TRÚC
 
-HOSTRA AI PoC được chia thành ba Part chính và một lớp Orchestration.
+HOSTRA AI PoC chia thành **Part 1, Part 2, Part 3** và một lớp **Orchestration**. Đây là kiến trúc mục tiêu, không phải tuyên bố các module đều đã triển khai.
 
-## 3.1. Part 1 — Verified AI Agent, Comment Triage & TTS
+## 3.1. Part 1 — Comment Processing, Knowledge Engine, Verified Agent & TTS
 
-Nhiệm vụ:
+- **M01 — Comment Processing (đã kiểm thử chức năng):** nhận mock comments, xác thực CommentEvent, lọc trùng/spam/off-topic bằng quy tắc, chấm điểm, quản lý hàng đợi và bàn giao `QueueItem`. Không dùng LLM.
+- **M02 — Knowledge Engine & RAG (đang thiết kế):** parse Catalog + 39 FAQ, chia chunk theo mục FAQ, xây chỉ mục lexical và vector, retrieval/ranking có dẫn nguồn. Không tạo câu trả lời LLM trong M02.
+- **M03 — Verified AI Sales Agent:** observation, Conversation Memory theo viewer/run, phân giải tham chiếu SKU, gọi Knowledge Engine/Tools, sinh ứng viên trả lời bằng LLM và kiểm chứng trước khi tạo AgentResponse.
+- **M04 — Speech Planner & TTS:** lựa chọn lời giới thiệu đã duyệt / câu trả lời hợp lệ / fallback, chuẩn hóa SpeechTurn và tạo WAV + AudioArtifact.
+- **M05 — Integration & Evaluation:** kiểm thử luồng Part 1, độ chính xác truy xuất và phát ngôn, lỗi, độ trễ, chi phí, audit và hợp đồng bàn giao.
 
-- Tiếp nhận bình luận.
-- Lọc spam và bình luận trùng lặp.
-- Chấm điểm và ưu tiên câu hỏi.
-- Quản lý ngữ cảnh hội thoại.
-- Truy xuất dữ liệu sản phẩm.
-- Kiểm chứng câu trả lời.
-- Chuẩn bị lời giới thiệu và lời trả lời.
-- Chuyển lời thoại thành audio.
-
-Output:
-
-- CommentDecision
-- AgentResponse
-- SpeechTurn
-- AudioArtifact
+**Output chính của Part 1:** CommentDecision, AgentResponse, SpeechTurn, AudioArtifact. `QueueItem`, `FAQChunk`, `RetrievedEvidence` là cấu trúc nội bộ, không tự ý đổi 10 public data contracts hiện có.
 
 ## 3.2. Orchestration — Speech Scheduling
 
-Nhiệm vụ:
+Orchestration quản lý giới hạn 120 giây, mức ưu tiên và thứ tự phát, không cho lời thoại chồng nhau, và đảm bảo mọi lời thoại thực sự phát được đối chiếu với audio/time window/video nguồn.
 
-- Quản lý thứ tự các lượt lời.
-- Xác định thời điểm bắt đầu phát audio.
-- Điều phối giữa lời giới thiệu và lời trả lời khách hàng.
-- Không cho phép các lời thoại chồng thời gian.
-- Kiểm tra giới hạn thời lượng video.
-- Cung cấp kế hoạch thời gian cho Part 2 và Part 3.
+**Thiết kế đích đề xuất gồm hai giai đoạn:** (1) admission chọn lời thoại cần tổng hợp, (2) final scheduling sau khi biết thời lượng WAV thực. Interface cụ thể phải thống nhất khi tích hợp M04–M05, không xem một `QueueItem.pop()` là một lời thoại sẽ phát.
 
 ## 3.3. Part 2 — Time-aligned Video Lip-sync
 
-Nhiệm vụ:
-
-- Kiểm tra quyền sử dụng khuôn mặt và giọng nói.
-- Xác định những khung hình cần xử lý.
-- Thực hiện lip-sync theo audio.
-- Tạo artifact có timestamp.
-- Kiểm tra kết quả render.
-
-Output:
-
-- RenderJob
-- VideoArtifact
-- Lip-sync overlays
+Kiểm tra quyền sử dụng, ánh xạ frame từ timeline và video nền, tạo RenderJob / VideoArtifact / overlays tại đúng vị trí được đặt lịch. Không nối các cảnh quay rời để thay thế video nền liên tục.
 
 ## 3.4. Part 3 — Continuous Video Compositor
 
-Nhiệm vụ:
+Tạo RunManifest, timeline, audit và benchmark; căn overlays + audio + comment theo video nền `base_operator.mp4` duy nhất; xuất `hostra_demo.mp4`.
 
-- Quản lý metadata phiên demo.
-- Xây dựng timeline.
-- Kiểm tra các sự kiện trên timeline.
-- Áp dụng lip-sync lên video nền liên tục.
-- Đồng bộ audio và bình luận.
-- Xuất video cuối.
-- Ghi audit và benchmark.
-
-Output:
-
-- RunManifest
-- TimelineEvent
-- AuditRecord
-- hostra_demo.mp4
-- benchmark.json
-
-## 3.5. Luồng xử lý tổng thể
+## 3.5. Luồng xử lý tổng thể (thiết kế mục tiêu)
 
 ```text
-PRODUCT DATA + FAQ + APPROVED SCRIPTS
-                   |
-                   v
-             PART 1 AGENT
-                   ^
-                   |
-             MOCK COMMENTS
-                   |
-                   v
-            COMMENT TRIAGE
-                   |
-          Filter / Rank / Queue
-                   |
-                   v
-             VERIFIED AGENT
-                   |
-                   v
-             SPEECH PLANNER
-                   |
-                   v
-              SPEECH TURN
-                   |
-                   v
-               TTS AUDIO
-                   |
-                   v
-             AUDIO ARTIFACT
-                   |
-                   v
-            SPEECH SCHEDULER
-                   |
-          Time-aligned Speech Plan
-                   |
-                   v
-         PART 2 VIDEO LIP-SYNC <---- BASE VIDEO
-                   |
-                   v
-            VIDEO ARTIFACTS
-                   |
-                   v
-          PART 3 VIDEO COMPOSITOR <---- BASE VIDEO
-                   |
-                   v
-              FINAL DEMO
-                   |
-       +-----------+-----------+
-       |           |           |
-    Timeline     Audit      Benchmark
+MOCK COMMENTS                  CATALOG + PRODUCT FAQ
+      |                                |
+      v                                v
+M01: INGEST -> TRIAGE -> QUEUE  M02: KNOWLEDGE PREPARATION
+      |                        (parse/chunk/index)
+      |                                |
+      v                                v
+Selected CommentEvent ------> M03: VERIFIED AI AGENT
+                  (memory + SKU resolver + evidence + LLM + verifier)
+                                       |
+                                 AgentResponse
+                                       |
+                   APPROVED SCRIPTS ---+--- SAFE FALLBACK
+                                       |
+                               M04: SPEECH PLANNER
+                                       |
+                                  SpeechTurn
+                                       |
+                         ORCHESTRATION: ADMISSION
+                                       |
+                                  TTS -> WAV
+                                       |
+                            AudioArtifact (real duration)
+                                       |
+                        ORCHESTRATION: FINAL SCHEDULE
+                                       |
+                    PART 2: TIME-ALIGNED LIP-SYNC
+                                       |
+                    PART 3: CONTINUOUS COMPOSITOR
+                                       |
+                                 hostra_demo.mp4
+                              + timeline/audit/benchmark
 ```
 
-Lưu ý:
-
-Speech Scheduler phải xác định thời điểm phát lời thoại trước khi Part 2 tạo RenderJob.
-
-Vì vậy, luồng thực thi thực tế không hoàn toàn tuyến tính theo thứ tự Part 1 → Part 2 → Part 3.
+M01 hiện mô phỏng một lượt bàn giao mỗi **12 giây**, `pop()` 16 comments đến **giây 188** vì runner drain queue. Đây là chế độ test hàng đợi, **không phải** lịch phát của video mục tiêu 120 giây. Mốc UTC phiên RUN-001 theo tài liệu là `2026-10-27T13:00:00Z`; video offset cần tính từ `RunManifest.timeline_start_at` khi tích hợp.
 
 ---
 
-# 4. CẤU TRÚC THƯ MỤC PROJECT
+# 4. CẤU TRÚC THƯ MỤC PROJECT — V2.1
+
+Dưới đây là **cây thư mục mục tiêu sau khi bổ sung Modular RAG**, trong đó chú thích `M01: đã triển khai` nghĩa là đã đối chiếu được từ các file code và kết quả chạy local bạn cung cấp; các mục `dự kiến` **chưa có nghĩa đã tồn tại trong repository**. Những file đang trống hoặc chưa được code không nên mô tả như tính năng hoàn thiện.
 
 ```text
 hostra-ai-poc/
-│
-├── .env.example
-├── .gitignore
+├── .env.example                        # Mẫu biến môi trường; được commit
+├── .gitignore                          # Ignore .env, .venv, runs và index sinh ra
 ├── README.md
-├── pyproject.toml
 ├── pytest.ini
 ├── requirements.txt
-├── requirements-dev.txt
-├── requirements-gpu.txt
+├── pyproject.toml                       # Dự kiến / tùy cách quản lý package
+├── requirements-dev.txt                # Dự kiến
+├── requirements-gpu.txt                # Dự kiến, GPU worker
 │
 ├── .github/
 │   └── workflows/
-│       └── ci.yml
+│       └── ci.yml                      # Dự kiến
 │
 ├── configs/
 │   ├── app.yaml
-│   ├── demo_scenario.yaml
-│   └── comment_policy.yaml
+│   ├── demo_scenario.yaml               # Dự kiến
+│   ├── comment_policy.yaml             # M01: đã sử dụng
+│   └── rag.yaml                        # M02: dự kiến (retrieval/index/eval)
 │
 ├── shared_data/
 │   ├── inputs/
@@ -290,29 +274,25 @@ hostra-ai-poc/
 │   │   ├── product_faq.md
 │   │   ├── mock_comments.json
 │   │   ├── creator_license.json
-│   │   ├── base_operator.mp4
-│   │   └── approved_product_scripts.json
+│   │   ├── approved_product_scripts.json  # Nội dung phải duyệt trước khi phát
+│   │   └── base_operator.mp4           # Chưa có video nguồn hoàn chỉnh
 │   │
-│   └── runs/
+│   ├── indexes/                        # M02.3: chỉ mục sinh ra; không commit
+│   │   └── knowledge/                  # Dự kiến; version + checksum nguồn
+│   │
+│   └── runs/                           # Artifact từng run; không commit
 │       └── <run_id>/
-│           │
 │           ├── manifest.json
-│           │
 │           ├── step1_agent_audio/
 │           │   ├── comment_decisions.json
 │           │   ├── answers.json
 │           │   ├── speech_turns.json
 │           │   └── audio/
-│           │       ├── intro_001.wav
-│           │       └── reply_001.wav
-│           │
+│           │       └── <audio_id>.wav
 │           ├── step2_lipsync/
 │           │   ├── render_jobs.json
 │           │   ├── video_artifacts.json
 │           │   └── overlays/
-│           │       ├── intro_001.mp4
-│           │       └── reply_001.mp4
-│           │
 │           └── step3_final/
 │               ├── hostra_demo.mp4
 │               ├── timeline.json
@@ -322,8 +302,7 @@ hostra-ai-poc/
 ├── src/
 │   └── hostra_ai/
 │       ├── __init__.py
-│       ├── pipeline.py
-│       │
+│       ├── pipeline.py                  # Điều phối toàn ứng dụng (dự kiến)
 │       ├── core/
 │       │   ├── __init__.py
 │       │   ├── config.py
@@ -337,20 +316,35 @@ hostra-ai-poc/
 │       │
 │       ├── part1_agent_tts/
 │       │   ├── __init__.py
-│       │   ├── comment_ingest.py
-│       │   ├── comment_triage.py
-│       │   ├── comment_queue.py
-│       │   ├── conversation_memory.py
-│       │   ├── knowledge_engine.py
-│       │   ├── verified_agent.py
-│       │   ├── answer_verifier.py
-│       │   ├── speech_planner.py
-│       │   ├── tts_provider.py
-│       │   └── pipeline.py
+│       │   ├── comment_ingest.py        # M01: đã triển khai
+│       │   ├── comment_policy.py        # M01: đã triển khai
+│       │   ├── comment_decisions.py     # M01: factory CommentDecision
+│       │   ├── comment_triage.py        # M01: đã triển khai
+│       │   ├── comment_queue.py         # M01: đã triển khai
+│       │   │
+│       │   ├── knowledge_engine.py      # M02: facade, không chứa toàn bộ RAG
+│       │   ├── knowledge/               # M02: Modular Knowledge Engine
+│       │   │   ├── __init__.py
+│       │   │   ├── models.py            # M02.1: FAQChunk, RetrievedEvidence nội bộ
+│       │   │   ├── catalog_repository.py # M02.1: lookup Catalog theo SKU/field
+│       │   │   ├── faq_parser.py        # M02.1: parse 39 mục FAQ
+│       │   │   ├── chunking.py          # M02.1: mỗi mục FAQ = 1 chunk
+│       │   │   ├── lexical_retriever.py # M02.2: keyword/BM25 baseline
+│       │   │   ├── embedding_provider.py # M02.3: embeddings provider
+│       │   │   ├── vector_index.py      # M02.3: local vector index
+│       │   │   ├── retriever.py         # M02.4: hybrid retrieval / metadata filters
+│       │   │   └── ranker.py           # M02.4: ranking/fusion
+│       │   │
+│       │   ├── conversation_memory.py   # M03: theo run_id, viewer_id
+│       │   ├── verified_agent.py        # M03: LLM/tool orchestration
+│       │   ├── answer_verifier.py       # M03: kiểm chứng phát ngôn
+│       │   ├── speech_planner.py        # M04: SpeechTurn/approved scripts
+│       │   ├── tts_provider.py          # M04: AudioArtifact/WAV
+│       │   └── pipeline.py             # M05: tích hợp Part 1
 │       │
 │       ├── orchestration/
 │       │   ├── __init__.py
-│       │   └── speech_scheduler.py
+│       │   └── speech_scheduler.py      # M04-M05: admission + final scheduling
 │       │
 │       ├── part2_video_lipsync/
 │       │   ├── __init__.py
@@ -384,6 +378,9 @@ hostra-ai-poc/
 │   └── app.js
 │
 ├── scripts/
+│   ├── script_part1/
+│   │   └── run_milestone01.py           # M01: runner thực tế
+│   ├── run_milestone02.py              # M02: runner truy xuất, dự kiến
 │   ├── validate_inputs.py
 │   ├── run_part1.py
 │   ├── prepare_lipsync.py
@@ -391,24 +388,31 @@ hostra-ai-poc/
 │   └── run_demo.py
 │
 ├── tests/
-│   ├── conftest.py
-│   │
 │   ├── fixtures/
 │   │   ├── part1/
 │   │   ├── part2/
 │   │   └── part3/
-│   │
 │   ├── unit/
 │   │   ├── test_part1.py
 │   │   ├── test_part2.py
-│   │   └── test_part3.py
-│   │
+│   │   ├── test_part3.py
+│   │   └── test_part1_code/             # M01 đã tạo; M02 thêm test tại đây
+│   │       ├── test_comment_ingest.py
+│   │       ├── test_comment_triage.py
+│   │       ├── test_comment_queue.py
+│   │       ├── test_catalog_repository.py  # M02.1 dự kiến
+│   │       ├── test_faq_parser.py           # M02.1 dự kiến
+│   │       ├── test_chunking.py            # M02.1 dự kiến
+│   │       ├── test_lexical_retriever.py   # M02.2 dự kiến
+│   │       ├── test_vector_index.py        # M02.3 dự kiến
+│   │       └── test_ranker.py              # M02.4 dự kiến
 │   ├── contract/
 │   │   ├── test_part1_contract.py
 │   │   ├── test_part2_contract.py
 │   │   └── test_part3_contract.py
-│   │
 │   └── integration/
+│       ├── test_comment_processing.py     # Tùy backlog
+│       ├── test_knowledge_engine.py       # M02 dự kiến
 │       ├── test_part1_pipeline.py
 │       ├── test_part2_pipeline.py
 │       ├── test_part3_pipeline.py
@@ -416,7 +420,8 @@ hostra-ai-poc/
 │
 └── docs/
     ├── architecture.md
-    ├── project_structure.md
+    ├── project_structure.md             # Tài liệu này (V2.1)
+    ├── rag_design.md                    # M02: thiết kế RAG, dự kiến
     ├── data_contract_vi.md
     ├── setup_guide.md
     ├── test_plan.md
@@ -424,17 +429,27 @@ hostra-ai-poc/
     └── demo_script.md
 ```
 
-**Lưu ý:**
+## 4.1. Nguyên tắc cập nhật cấu trúc
 
-- Cây thư mục thể hiện kiến trúc mục tiêu.
-- Những file chưa được triển khai sẽ được bổ sung theo backlog.
-- Không cần tạo trước mọi file Python rỗng.
-- Các thư mục kết quả trong `shared_data/runs/` phải được sinh khi thực thi.
-- Không commit các output lớn hoặc dữ liệu chưa có quyền sử dụng.
+1. **Không tái cấu trúc M01:** giữ nguyên năm module `comment_*` và factory `comment_decisions.py`, cùng các bài test đã qua kiểm thử.
+2. **M02 sử dụng package `knowledge/`:** mỗi module đảm nhiệm một phần parsing, chunking, indexing, retrieval hoặc ranking. `knowledge_engine.py` ở thư mục cha là **facade duy nhất** mà Verified Agent sẽ gọi.
+3. **Tạo file theo từng sub-milestone:** M02.1 chỉ cần `models.py`, `catalog_repository.py`, `faq_parser.py`, `chunking.py` và facade; chưa cần file vector/embedding thực thi.
+4. **Không chuyển lẫn trách nhiệm:** `ConversationMemory`, `VerifiedAgent`, `AnswerVerifier` thuộc M03; generation bằng LLM không nằm trong M02; Speech Scheduler ở `orchestration/`.
+5. **Đường dẫn thực tế ưu tiên hơn cây đề xuất:** runner M01 đang là `scripts/script_part1/run_milestone01.py`; các unit tests M01 đang ở `tests/unit/test_part1_code/`.
+6. **Chỉ mục là dữ liệu dẫn xuất:** có thể xóa và rebuild từ Catalog/FAQ; không commit `shared_data/indexes/` hoặc các dữ liệu chứa credentials.
+7. **Không nhầm file có tên `approved` với đã phê duyệt:** scripts, ảnh/video và license cần kiểm tra trạng thái và quyền thực trước khi phát hoặc render.
+
+## 4.2. Trạng thái được xác nhận đến 28/10/2026
+
+- **M01:** `ingest_comments`, `load_policy`, `CommentTriage.evaluate`, `CommentQueue.admit/reevaluate/pop` và `make_decision` đã có code được người dùng cung cấp. Unit tests M01 `17/17` pass, contract Part 1 `17/17` pass, full suite `241 passed, 65 subtests passed` theo log chạy local.
+- **Runner M01:** 20 comments vào, 16 được bàn giao trong chế độ drain đến giây 188; 4 bị skipped gồm duplicate/spam/off-topic/expired. **Không có SpeechTurn, LLM hoặc TTS nào được tạo trong runner này.**
+- **M02:** có dữ liệu 2 SKU, 39 FAQ; phương án modular đã được chốt ở mức kiến trúc. Chưa xác nhận đã có parser/index/retriever chạy được.
+- **M03–M05, Orchestration, Part 2/3:** các file trong cây là kiến trúc mục tiêu; cần đối chiếu implementation thực tế và test trước khi xem là hoàn thành.
 
 ---
 
 # 5. ROOT DIRECTORY — CẤU HÌNH CHUNG
+
 
 | File | Công dụng | Input | Output |
 |---|---|---|---|
@@ -447,17 +462,24 @@ hostra-ai-poc/
 | `requirements-dev.txt` | Hỗ trợ cài công cụ phát triển | Pytest, Ruff và công cụ dev | Môi trường kiểm thử |
 | `requirements-gpu.txt` | Phụ thuộc phục vụ GPU worker | PyTorch, lip-sync dependencies | Môi trường xử lý video |
 
+
 ## 5.1. Quy tắc quản lý dependencies
+
 
 Nhóm cần thống nhất một nguồn khai báo dependencies chính để tránh xung đột phiên bản.
 
+
 Nếu sử dụng `pyproject.toml` làm nguồn cấu hình chính thì các file requirements nên đóng vai trò hỗ trợ cài đặt.
+
 
 Môi trường ứng dụng và môi trường GPU có thể dùng phiên bản Python khác nhau khi thư viện lip-sync yêu cầu.
 
+
 Không bắt buộc cài toàn bộ dependencies GPU trên máy của mọi thành viên.
 
+
 ## 5.2. Quy tắc bảo mật
+
 
 - Không commit `.env`.
 - Không đưa API key thật vào `.env.example`.
@@ -465,16 +487,21 @@ Không bắt buộc cài toàn bộ dependencies GPU trên máy của mọi thà
 - Không đưa video hoặc giọng nói của người thật lên repository khi chưa được phép.
 - Không lưu thông tin nhạy cảm trong log.
 
+
 ---
 
+
 # 6. `.github/` — CI VÀ QUẢN LÝ CHẤT LƯỢNG
+
 
 | File/Folder | Công dụng |
 |---|---|
 | `.github/workflows/` | Lưu cấu hình GitHub Actions |
 | `ci.yml` | Tự động kiểm tra code khi push hoặc tạo Pull Request |
 
+
 CI dự kiến:
+
 
 1. Cài dependencies cần thiết.
 2. Kiểm tra cú pháp và coding style.
@@ -483,159 +510,105 @@ CI dự kiến:
 5. Chạy integration tests không phụ thuộc GPU.
 6. Báo kết quả pass/fail.
 
+
 Các bài benchmark GPU và kiểm thử chất lượng video có thể được chạy riêng.
+
 
 Không yêu cầu GitHub Actions chạy model lip-sync nặng trong mỗi Pull Request.
 
+
 ---
+
 
 # 7. `configs/` — CẤU HÌNH HOẠT ĐỘNG
 
-| File | Công dụng | Input | Output |
-|---|---|---|---|
-| `app.yaml` | Cấu hình runtime và provider | LLM, TTS, timeout, paths | Application configuration |
-| `demo_scenario.yaml` | Kịch bản phiên demo | SKU, video nguồn, cấu hình sự kiện | Demo scenario |
-| `comment_policy.yaml` | Quy tắc lọc và ưu tiên bình luận | Threshold, queue settings | Comment policy |
+| File | Công dụng | Trạng thái |
+|---|---|---|
+| `app.yaml` | Runtime, cấu hình LLM/TTS/provider và đường dẫn nếu được hỗ trợ | Cấu hình app; giá trị model phải kiểm tra với tài khoản API thực tế |
+| `demo_scenario.yaml` | Run ID, Active SKU, video nguồn, time window và kịch bản mô phỏng | Dự kiến / chưa xác nhận hoàn thiện |
+| `comment_policy.yaml` | Quy tắc duplicate, deferred TTL, queue capacity, fairness, scoring | **M01 đã sử dụng** |
+| `rag.yaml` | Tham số FAQ chunking, search top-k, embedding provider, index và eval | **M02 dự kiến, chưa cần API Key ở M02.1–M02.2** |
 
 ## 7.1. `app.yaml`
 
-Dự kiến chứa:
-
-- Chế độ chạy offline.
-- Cấu hình LLM provider.
-- Cấu hình TTS provider.
-- Cấu hình lip-sync provider.
-- Đường dẫn dữ liệu.
-- Timeout và giới hạn tài nguyên.
-- Logging configuration.
-
-Không lưu credentials thật trong file YAML.
+Quản lý cấu hình provider và runtime ở cấp ứng dụng; không chứa secrets. Tách `OPENAI_API_KEY` trong file `.env` không commit. Không mặc định model ID do tài liệu đề xuất là model đã khả dụng trên tài khoản API.
 
 ## 7.2. `demo_scenario.yaml`
 
-Dự kiến chứa:
+Kịch bản phiên demo cho `RUN-001` phải liên kết với `RunManifest`, thời điểm bắt đầu UTC và video offset. Mốc mẫu từ FAQ: `2026-10-27T13:00:00Z`. Khung thời gian mục tiêu 120 giây cần được kiểm tra bởi Orchestration, không ép M01 Queue tự phát audio.
 
-- Run configuration.
-- Active SKU.
-- Base video.
-- Avatar.
-- Nguồn mock comments.
-- Nguồn kịch bản giới thiệu đã duyệt.
-- Thời lượng và thông số video mục tiêu.
+## 7.3. `comment_policy.yaml` (M01)
 
-File này không nên chứa logic chọn bình luận đã hardcode theo từng `comment_id`.
+Cấu hình đang được M01 đọc: policy version, duplicate cùng viewer/run trong 30 giây, deferred TTL 30 giây từ `received_at`, giới hạn queue, fairness và điểm theo nhóm từ khóa. Chính sách chọn bình luận **không** phải nguồn bằng chứng về thông số sản phẩm.
 
-Việc chọn bình luận phải được thực hiện bởi Comment Triage theo policy.
+## 7.4. `rag.yaml` (M02, đề xuất)
 
-## 7.3. `comment_policy.yaml`
-
-Dự kiến chứa:
-
-- Bật/tắt spam filtering.
-- Deduplication policy.
-- Trọng số ưu tiên câu hỏi.
-- Giới hạn kích thước hàng đợi.
-- Thời gian chờ tối đa.
-- Giới hạn lượt trả lời của một viewer.
-- Quy tắc xử lý câu hỏi hết hạn.
-
-Các ngưỡng ban đầu là cấu hình thử nghiệm và phải được điều chỉnh dựa trên test.
+Chứa các nhóm `knowledge`, `lexical`, `embedding`, `retrieval`, `ranking`, `evaluation` và phiên bản chỉ mục khi đã triển khai. Mọi lựa chọn `top_k`, model, phương pháp fusion/rerank phải thử nghiệm; không ghi URL/token bí mật. Với dữ liệu hiện tại (39 FAQ, 2 SKU), ưu tiên index chạy local và có khả năng rebuild.
 
 ---
 
-# 8. `shared_data/inputs/` — DỮ LIỆU ĐẦU VÀO
+# 8. `shared_data/inputs/` — DỮ LIỆU ĐẦU VÀO VÀ KNOWLEDGE INDEX
 
-| File | Công dụng | Module sử dụng |
+| File | Vai trò | Module sử dụng |
 |---|---|---|
-| `catalog_skus.json` | Dữ liệu có cấu trúc của sản phẩm | Knowledge Engine |
-| `product_faq.md` | FAQ và thông tin sản phẩm đã duyệt | Retrieval, Verifier |
-| `mock_comments.json` | Mô phỏng bình luận khách hàng | Comment Ingest |
-| `creator_license.json` | Thông tin quyền sử dụng hình ảnh/giọng nói | License Gate |
-| `base_operator.mp4` | Video nền duy nhất của phiên demo | Part 2, Part 3 |
-| `approved_product_scripts.json` | Nội dung giới thiệu đã được duyệt | Speech Planner |
+| `catalog_skus.json` | 2 SKU, giá/tồn kho **giả lập** và thông số cấu trúc | M01 kiểm tra Active SKU; M02 Catalog Repository |
+| `product_faq.md` | 39 FAQ gồm gợi ý tư vấn và evidence; **không phải FAQ chính thức hãng** | M02 FAQ Parser/Chunking; M03 Verified Agent |
+| `mock_comments.json` | 20 bình luận giả lập của RUN-001 | M01 Comment Ingest |
+| `creator_license.json` | Mã tham chiếu cấp phép trong dữ liệu mô phỏng; **không phải chứng nhận đồng ý thực** | Part 2 License Gate |
+| `base_operator.mp4` | Video nền liên tục cho phiên demo | Part 2, Part 3 (chưa quay hoàn chỉnh) |
+| `approved_product_scripts.json` | 15 kịch bản gợi ý, cần phê duyệt thực trước khi phát | M04 Speech Planner |
 
-## 8.1. `catalog_skus.json`
+## 8.1. `catalog_skus.json` — Structured Source of Truth
 
-Chứa những thông tin như:
+Các giá trị trong Catalog được tra trực tiếp theo SKU và field, **không** yêu cầu semantic search để lấy giá, tồn kho hay số liệu kỹ thuật. ASUS `LAPTOP-ASUS-001`: giá demo 26.500.000 VNĐ, 16GB RAM không nâng cấp, SSD 1TB và cờ nâng cấp SSD chưa xác nhận (`null`). Lenovo `LAPTOP-LENOVO-002`: giá demo 25.690.000 VNĐ, 16GB RAM có thể nâng cấp, SSD 512GB có thể nâng cấp. Các thông tin giá/tồn kho không phải báo giá bán hàng thực.
 
-- SKU ID.
-- Tên sản phẩm.
-- Giá.
-- Mô tả.
-- Thuộc tính.
-- Thông tin khuyến mãi hoặc tồn kho trong dữ liệu demo nếu có.
+## 8.2. `product_faq.md` — FAQ Knowledge Base
 
-Giá, tồn kho và ưu đãi phải lấy từ nguồn dữ liệu có thẩm quyền.
+Tài liệu chứa 39 mục: **10 ASUS, 10 Lenovo, 11 Compare, 8 Sales**. Mỗi mục `### FAQ-*` có ID ổn định, SKU, Câu hỏi, Trả lời gợi ý, Hỏi thêm và Bằng chứng. M02.1 parse theo cấu trúc heading, chuẩn bị `FAQChunk` với metadata (ID, SKU liên quan, version và tham chiếu), không fixed-size chunking phá ranh giới FAQ.
 
-LLM không được tự tạo những thông tin này.
+**Nguồn trích dẫn:** `faq:FAQ-ASUS-004` tham chiếu FAQ; `catalog:LAPTOP-ASUS-001` tham chiếu Catalog. ID nguồn chỉ cho biết nguồn tồn tại, chưa tự chứng minh mọi mệnh đề trong câu trả lời. Nếu thông tin mâu thuẫn hoặc chưa xác nhận, Agent cần xử lý an toàn thay vì tự suy diễn.
 
-## 8.2. `mock_comments.json`
+## 8.3. `mock_comments.json`
 
-Lưu danh sách bình luận giả lập.
+M01 dùng `run_id`, `viewer_id`, `received_at`, `active_sku_id`. Mốc bắt đầu video `timeline_start_at` và UTC business timestamp cần được ánh xạ rõ ràng khi tạo RunManifest; không dùng thời gian thực máy để tính TTL cho dữ liệu replay lịch sử.
 
-Mỗi bình luận cần được liên kết với:
+## 8.4. `base_operator.mp4`
 
-- Comment ID.
-- Viewer ID.
-- Nội dung.
-- Thời điểm xuất hiện trong kịch bản.
-- Active SKU khi được tiếp nhận.
+Một video nền liên tục với góc quay rõ mặt, điều kiện ánh sáng ổn định, quyền sử dụng hợp lệ. Thời lượng thực khi đã quay là ràng buộc đầu vào của Scheduler/Compositor, không phải kết quả mô phỏng hàng đợi.
 
-Thời gian xuất hiện trong video nên được biểu diễn bằng offset theo mili giây trong kịch bản đầu vào.
+## 8.5. `approved_product_scripts.json`
 
-Không nhầm offset trên video với timestamp UTC của dữ liệu nghiệp vụ.
+Các script có mã, SKU, nội dung, loại lượt nói và trạng thái phê duyệt. **Chưa coi 15 scripts đã được approved chỉ vì tên file.** Chỉ cho phép phát script khi có bằng chứng phê duyệt phù hợp.
 
-Sau khi được chuẩn hóa, dữ liệu hợp lệ trở thành `CommentEvent`.
+## 8.6. `shared_data/indexes/knowledge/` — Generated Index (M02.3)
 
-## 8.3. `base_operator.mp4`
-
-Là video nguồn xuyên suốt của một phiên demo.
-
-Yêu cầu:
-
-1. Góc quay ổn định.
-2. Khuôn mặt nhìn thấy rõ.
-3. Hạn chế che vùng miệng.
-4. Sản phẩm được cầm và thao tác tự nhiên.
-5. Ánh sáng tương đối ổn định.
-6. Thời lượng đủ cho toàn bộ kịch bản.
-7. Có quyền sử dụng hình ảnh phù hợp.
-
-Không tự ý lặp hoặc cắt video nguồn để kéo dài thời lượng nếu chưa kiểm tra tính liên tục.
-
-## 8.4. `approved_product_scripts.json`
-
-Chứa kịch bản giới thiệu sản phẩm được phê duyệt.
-
-Mỗi nội dung nên có:
-
-- Script ID.
-- SKU ID.
-- Loại lời thoại.
-- Text.
-- Thông tin phê duyệt.
-
-Nội dung này được dùng để tạo `SpeechTurn` ngay cả khi chưa có comment.
-
-Không tạo bình luận giả của khách hàng chỉ để kích hoạt lời giới thiệu.
+Thư mục dự kiến lưu local index, version của source Catalog/FAQ, embedding model ID và checksum để phát hiện index cũ. Không dùng làm nguồn sự thật thay Catalog/FAQ. M02.1–M02.2 có thể chạy hoàn toàn không cần index vector hay API Key. Ignore thư mục này trong Git nếu chứa dữ liệu dẫn xuất lớn.
 
 ---
 
 # 9. `shared_data/runs/` — ARTIFACTS CỦA MỘT LẦN CHẠY
 
+
 Mỗi lần chạy được định danh bằng `run_id`.
+
 
 Ví dụ:
 
+
 `shared_data/runs/run_001/`
+
 
 Các artifact của các lần chạy khác nhau không được ghi đè lên nhau.
 
+
 ## 9.1. `manifest.json`
+
 
 Được tạo từ `RunManifest`.
 
+
 Chứa:
+
 
 - Run ID.
 - Base video path.
@@ -647,9 +620,12 @@ Chứa:
 - Execution mode.
 - Output path.
 
+
 `manifest.json` là nguồn tham chiếu thống nhất cho các bước xử lý.
 
+
 ## 9.2. `step1_agent_audio/`
+
 
 | File | Nội dung | Schema |
 |---|---|---|
@@ -658,17 +634,23 @@ Chứa:
 | `speech_turns.json` | Các lượt lời được phép phát | SpeechTurn |
 | `audio/*.wav` | Giọng nói TTS | AudioArtifact |
 
+
 Không phải mọi CommentEvent đều tạo AgentResponse.
+
 
 Không phải mọi SpeechTurn đều xuất phát từ AgentResponse.
 
+
 Ví dụ:
+
 
 - Product introduction → SpeechTurn → AudioArtifact.
 - Selected comment → AgentResponse → SpeechTurn → AudioArtifact.
 - Skipped comment → CommentDecision, không sinh lời thoại.
 
+
 ## 9.3. `step2_lipsync/`
+
 
 | File | Nội dung |
 |---|---|
@@ -676,7 +658,9 @@ Ví dụ:
 | `video_artifacts.json` | Metadata kết quả render |
 | `overlays/` | Các artifact lip-sync trung gian |
 
+
 Kết quả Part 2 phải liên kết được với:
+
 
 - Run ID.
 - SpeechTurn.
@@ -686,9 +670,12 @@ Kết quả Part 2 phải liên kết được với:
 - Source timestamp.
 - Target timestamp.
 
+
 Các output trong `overlays/` không phải cảnh quay độc lập.
 
+
 ## 9.4. `step3_final/`
+
 
 | File | Nội dung |
 |---|---|
@@ -697,15 +684,21 @@ Các output trong `overlays/` không phải cảnh quay độc lập.
 | `audit_log.json` | Nhật ký kiểm toán |
 | `benchmark.json` | Kết quả đo thực tế |
 
+
 Không được ghi số benchmark giả định vào file kết quả như thể đã được đo.
+
 
 ---
 
+
 # 10. `core/` — THÀNH PHẦN DÙNG CHUNG
+
 
 Đường dẫn:
 
+
 `src/hostra_ai/core/`
+
 
 | File | Input | Output | Chức năng |
 |---|---|---|---|
@@ -717,9 +710,12 @@ Không được ghi số benchmark giả định vào file kết quả như th�
 | `schemas/part3.py` | Part 3 data | Pydantic models | Contracts Part 3 |
 | `schemas/__init__.py` | Các schema | Package exports | Cung cấp import thống nhất |
 
+
 ## 10.1. Bộ 10 schema
 
+
 ### Part 1
+
 
 1. CommentEvent
 2. CommentDecision
@@ -727,29 +723,39 @@ Không được ghi số benchmark giả định vào file kết quả như th�
 4. SpeechTurn
 5. AudioArtifact
 
+
 ### Part 2
+
 
 6. RenderJob
 7. VideoArtifact
 
+
 ### Part 3
+
 
 8. RunManifest
 9. TimelineEvent
 10. AuditRecord
 
+
 ## 10.2. `common.py`
 
+
 Chứa những thành phần thực sự được chia sẻ:
+
 
 - ID validation patterns.
 - Shared Enum hoặc Literal definitions khi cần.
 - Reason codes dùng chung.
 - Validation helpers thực sự tái sử dụng.
 
+
 Không đặt business logic hoặc logic gọi provider trong `common.py`.
 
+
 ## 10.3. Quy tắc schema
+
 
 - Dùng Pydantic v2.
 - Tên trường dùng snake_case.
@@ -761,202 +767,170 @@ Không đặt business logic hoặc logic gọi provider trong `common.py`.
 - Không tự ý thay đổi field đang được module khác sử dụng.
 - Khi đổi contract phải cập nhật unit/contract tests.
 
+
 Chi tiết từng field nằm trong:
+
 
 `docs/data_contract_vi.md`
 
+
 ---
 
-# 11. PART 1 — VERIFIED AGENT, COMMENT TRIAGE & TTS
 
-Đường dẫn:
+# 11. PART 1 — COMMENT, KNOWLEDGE, VERIFIED AGENT & TTS
 
-`src/hostra_ai/part1_agent_tts/`
+**Đường dẫn:** `src/hostra_ai/part1_agent_tts/`.
 
-## 11.1. Mục tiêu
+## 11.1. Trách nhiệm và ranh giới
 
-Part 1 xử lý bình luận và nội dung lời thoại.
+Part 1 cung cấp các năng lực theo milestone: M01 xử lý comment và queue, M02 tìm bằng chứng, M03 sinh và kiểm chứng câu trả lời, M04 chuẩn bị SpeechTurn/TTS và M05 tích hợp/đánh giá. Không coi comment được `selected` là đã được trả lời/phát.
 
-Hệ thống phải:
+## 11.2. Bảng module cấp Part 1
 
-1. Nhận dữ liệu bình luận.
-2. Kiểm tra Active SKU.
-3. Lọc spam và bình luận trùng.
-4. Ưu tiên những câu hỏi phù hợp.
-5. Quản lý ngữ cảnh của viewer.
-6. Truy xuất thông tin sản phẩm.
-7. Kiểm chứng câu trả lời.
-8. Chuẩn bị lời thoại.
-9. Tạo audio bằng TTS.
-
-## 11.2. Chức năng từng file
-
-| File | Input | Output | Chức năng |
+| Module | Input | Output | Milestone |
 |---|---|---|---|
-| `comment_ingest.py` | Mock comments, Active SKU | CommentEvent | Chuẩn hóa đầu vào |
-| `comment_triage.py` | CommentEvent, policy | CommentDecision | Lọc, gộp, chấm ưu tiên |
-| `comment_queue.py` | CommentDecision | Pending comments | Quản lý hàng đợi |
-| `conversation_memory.py` | Viewer ID, lịch sử | Conversation context | Nối ngữ cảnh hội thoại |
-| `knowledge_engine.py` | SKU, query, catalog, FAQ | Evidence | Truy xuất dữ liệu |
-| `verified_agent.py` | Comment, context, evidence | Candidate answer | Tạo câu trả lời |
-| `answer_verifier.py` | Candidate answer, evidence | Verification result | Kiểm tra câu trả lời |
-| `speech_planner.py` | Verified answer hoặc approved script | SpeechTurn | Tạo lượt lời |
-| `tts_provider.py` | SpeechTurn | WAV, AudioArtifact | Chuyển text thành audio |
-| `pipeline.py` | Part 1 inputs | Part 1 artifacts | Điều phối Part 1 |
+| `comment_ingest.py` | Mock comments, run ID, catalog SKU | `list[CommentEvent]` | M01, đã code |
+| `comment_policy.py` | `comment_policy.yaml` | `CommentPolicy` nội bộ | M01, đã code |
+| `comment_decisions.py` | CommentEvent, action/reason/score/clock | `CommentDecision` | M01, đã code |
+| `comment_triage.py` | CommentEvent, CommentPolicy | `CommentDecision` | M01, đã code |
+| `comment_queue.py` | CommentEvent, CommentDecision, clock | `QueueItem`, decision history | M01, đã code |
+| `knowledge_engine.py` | Query, SKU, Catalog/FAQ | Evidence / lookups | M02, facade |
+| `knowledge/models.py` | Knowledge data | FAQChunk / RetrievedEvidence | M02.1 |
+| `knowledge/catalog_repository.py` | Catalog JSON | Structured field lookup | M02.1 |
+| `knowledge/faq_parser.py` | FAQ Markdown | Parsed FAQ records | M02.1 |
+| `knowledge/chunking.py` | Parsed FAQ | FAQChunk + metadata | M02.1 |
+| `knowledge/lexical_retriever.py` | Query + chunks | Ranked lexical candidates | M02.2 |
+| `knowledge/embedding_provider.py` | Text + embedding config | Vectors | M02.3 |
+| `knowledge/vector_index.py` | Vectors + metadata | Similarity candidates | M02.3 |
+| `knowledge/retriever.py` | Query, filters, index/candidates | Combined evidence | M02.4 |
+| `knowledge/ranker.py` | Candidate evidence | Ranked evidence | M02.4 |
+| `conversation_memory.py` | run_id, viewer_id, events | Conversation context | M03 |
+| `verified_agent.py` | Selected comment + memory + evidence | Candidate answer; sau verification mới có AgentResponse | M03 |
+| `answer_verifier.py` | Candidate + Catalog/FAQ evidence | Verification/allowed response | M03 |
+| `speech_planner.py` | Verified answer / approved script | SpeechTurn | M04 |
+| `tts_provider.py` | SpeechTurn | WAV, AudioArtifact | M04 |
+| `pipeline.py` | Part 1 inputs | Part 1 artifacts | M05 |
 
-## 11.3. Comment Triage
+## 11.3. M01 — Comment Processing (đã kiểm thử chức năng)
 
-Comment Triage không chỉ kiểm tra nội dung độc hại.
+Thứ tự thực thi:
 
-Nó còn thực hiện:
+```text
+mock_comments.json + Catalog SKU -> ingest_comments()
+  -> CommentEvent -> CommentTriage.evaluate()
+  -> CommentDecision -> CommentQueue.admit()
+  -> reevaluate(now) / pop(now) -> QueueItem
+```
 
-- Spam filtering.
-- Duplicate detection.
-- Active SKU relevance.
-- Priority scoring.
-- Basic fairness giữa các viewer.
-- Queue admission.
+M01 dùng **rule-based**: duplicate cùng run/viewer/text chuẩn hóa trong cửa sổ 30 giây (gồm biên), spam bảo thủ, off-topic bảo thủ, priority 0–100, queue capacity 5, deferred TTL 30 giây, fairness giữa viewers. `now` là **simulation clock**. Factory `make_decision()` tạo ID riêng cho mỗi thay đổi quyết định. Queue lưu `_ready`, `_deferred`, `_terminal`; `pop()` không đồng nghĩa AI Agent đã trả lời thành công.
 
-Một số hành động của CommentDecision:
+**Runner đang sử dụng:** `scripts/script_part1/run_milestone01.py`, một lượt `pop` mỗi 12 giây, drain queue đến rỗng. Theo log thực tế: 20 đầu vào, 16 handed-off, 4 skipped; 17 bài unit M01, 17 contract Part1, full suite 241 tests và 65 subtests đạt. Video mục tiêu 120 giây **chưa áp dụng** cho runner này.
 
-- selected
-- deferred
-- skipped
-- escalated
+## 11.4. M02 — Modular Knowledge Engine & RAG (đang triển khai)
 
-Quyết định phải có lý do rõ ràng để audit.
+**Nguyên tắc:** Catalog là nguồn structured truth cho giá, tồn kho, thông số; FAQ là kiến thức giải thích có thể search. Không dùng vector similarity để quyết định số tiền, không coi FAQ gợi ý là phát ngôn đã kiểm chứng.
 
-Không nhất thiết đưa mọi comment vào LLM.
+### M02.1. Preparation / Chunking
 
-## 11.4. Conversation Memory
+- Parse `product_faq.md` theo heading `### FAQ-*`: **1 FAQ = 1 chunk**, giữ đủ question, answer suggestion, follow-up, nguồn và SKU metadata.
+- Catalog lookup trực tiếp theo SKU / field, giữ `null` là chưa xác nhận; kiểm tra SKU trùng hoặc tham chiếu sai.
+- Models nội bộ: `FAQChunk` và `RetrievedEvidence`; schema hiện có trong `core/schemas/part1.py` không thay đổi.
+- Đọc dữ liệu và test hoàn toàn offline, không cần embeddings/LLM.
 
-Quản lý lịch sử tương tác theo:
+### M02.2. Lexical Retrieval Baseline
 
-- run_id
-- viewer_id
+- Keyword/BM25 retrieval trên 39 chunks; tạo bộ câu hỏi kiểm thử cùng expected relevant FAQ IDs; đánh giá Recall@K/MRR; không cần API Key.
 
-Ví dụ:
+### M02.3. Embeddings & Vector Index
 
-Viewer hỏi giá sản phẩm.
+- Embedding provider có thể thay thế; chỉ gọi API khi có khóa hợp lệ hoặc chọn model local tương thích. Cache/index có phiên bản và checksum, không embed lại mỗi comment.
 
-Sau đó viewer hỏi:
+### M02.4. Routing, Hybrid Retrieval & Ranking
 
-"Thế bảo hành bao lâu?"
+- Query router quyết định Catalog direct lookup, FAQ retrieval hoặc kết hợp; khi so sánh 2 SKU phải lấy evidence cả 2. Hybrid fusion và reranking chỉ dùng nếu thử nghiệm tốt hơn baseline.
 
-Hệ thống có thể sử dụng ngữ cảnh trước để xác định sản phẩm đang được nói đến.
+### M02.5. Evaluation & Evidence Handoff
 
-Trong PoC, Conversation Memory có thể sử dụng bộ nhớ tạm trong quá trình chạy.
+- Đánh giá kết quả retrieval theo các câu hỏi từ mock comments và tập golden questions (giá, RAM, so sánh, thiếu benchmark, chính sách chưa xác nhận).
+- Đầu ra có `ref`, `source_type`, `sku_ids`, `content`, `score`, `source_version` nếu khả dụng.
+- Evidence cho M03 được truyền thông qua `knowledge_engine.py` facade; **không gọi LLM generation trong M02**.
 
-Chưa bắt buộc xây database riêng.
+### Chú ý FAQ và Evidence
 
-## 11.5. Verified Agent
+Các mục `FAQ-ASUS-*`, `FAQ-LENOVO-*`, `FAQ-COMPARE-*`, `FAQ-SALES-*` không tự bảo đảm các mệnh đề bên trong đúng. `faq:FAQ-COMPARE-003` và `catalog:LAPTOP-ASUS-001` là refs, không phải verification verdict. Với source bị mâu thuẫn hoặc giá trị thiếu, Agent phải báo không đủ căn cứ hoặc yêu cầu xác minh.
 
-Câu trả lời phải dựa trên thông tin sản phẩm đã được kiểm chứng.
+## 11.5. M03 — Verified AI Agent / Observation / Conversation Memory
 
-Quy tắc:
+Agent nhận **CommentEvent đã được Queue bàn giao**, kèm run/viewer context; có thể dùng QueueItem ở ranh giới orchestration nhưng không khóa Agent vào implementation `_ready`/`_deferred`. Agent phân giải câu hỏi tiếp nối (ví dụ viewer đang hỏi Lenovo mặc dù Active SKU là ASUS), gọi Knowledge Engine rồi tạo ứng viên câu trả lời. Deterministic Answer Verifier kiểm tra các facts và policy; chỉ output đã xác minh mới được đóng gói thành `AgentResponse.status="answered"`. Khi thiếu dữ liệu dùng `clarification_needed` hoặc `blocked` theo contract.
 
-1. Không tự tạo giá, tồn kho hoặc khuyến mãi.
-2. Không sử dụng hướng dẫn từ comment để thay đổi chính sách hệ thống.
-3. Không phát câu trả lời thiếu bằng chứng khi nội dung yêu cầu bằng chứng.
-4. Nếu không thể xác minh thì từ chối hoặc yêu cầu làm rõ.
-5. Câu trả lời bị blocked không được gửi sang TTS.
+## 11.6. M04 — Speech Planner & TTS
 
-## 11.6. Speech Planner
+Ba loại lời thoại: `product_intro` từ script thực sự đã duyệt, `comment_reply` từ AgentResponse hợp lệ và `safe_fallback` từ kịch bản dự phòng an toàn. Scheduler admission chọn SpeechTurn hợp lệ để TTS tổng hợp; TTS tạo file WAV mono hợp lệ, đo thời lượng thực, xuất AudioArtifact; final scheduling mới đặt phát vào video. Không phát nội dung `AgentResponse` đang blocked.
 
-Speech Planner chuẩn hóa các loại lời thoại:
+## 11.7. M05 — Integration & Evaluation
 
-- Product introduction.
-- Comment reply.
-- Safe fallback.
+Kiểm thử: comment → evidence → verified AgentResponse → SpeechTurn → AudioArtifact; đánh giá FAQ retrieval Recall@K, groundedness/verification, các trường hợp không biết, chi phí provider, thời lượng WAV và đúng mốc video. Benchmark chỉ dùng số đo thực, phân biệt simulation delay và latency inference.
 
-Product introduction sử dụng kịch bản đã duyệt.
+## 11.8. Public Contracts và internal models
 
-Comment reply sử dụng AgentResponse đã được phép phát.
-
-Speech Planner tạo SpeechTurn.
-
-## 11.7. TTS Provider
-
-TTS nhận nội dung từ SpeechTurn.
-
-Output:
-
-- Audio file.
-- Duration.
-- Sample rate.
-- AudioArtifact metadata.
-
-Audio cần được liên kết với SpeechTurn.
-
-Không giả định mọi audio đều phải có viewer_id hoặc response_id.
+Các public contracts của Part 1 vẫn là **CommentEvent, CommentDecision, AgentResponse, SpeechTurn, AudioArtifact**. Internal `QueueItem`, `CommentPolicy`, `FAQChunk`, `RetrievedEvidence` được phép tách module riêng để dễ kiểm thử nhưng không tự ý bổ sung field vào public contract. `AgentResponse.evidence_refs` phải tham chiếu nguồn có thật và kiểm tra claim-level ở Verifier.
 
 ---
 
 # 12. ORCHESTRATION — SPEECH SCHEDULER
 
-Đường dẫn:
+**Đường dẫn mục tiêu:** `src/hostra_ai/orchestration/speech_scheduler.py`.
 
-`src/hostra_ai/orchestration/`
+## 12.1. Mục tiêu và ranh giới
 
-## 12.1. Mục tiêu
+Scheduler quản lý thời điểm phát, mức ưu tiên speech (khác `CommentDecision.priority_score`), không cho audio chồng nhau, và giữ tất cả sự kiện trong độ dài video nền. Scheduler không được biến mọi comment `selected` thành lượt nói và không tự kiểm chứng dữ liệu sản phẩm.
 
-Speech Scheduler quyết định một lượt lời được phát lúc nào.
+## 12.2. Thiết kế hai giai đoạn (đề xuất khi tích hợp)
 
-Input:
+1. **Admission Scheduling:** chọn SpeechTurn cần tổng hợp dựa trên policy, tình trạng audio/queue và giới hạn video; chỉ gọi TTS cho những lượt được chấp nhận.
+2. **TTS:** tổng hợp WAV, kiểm tra file thật và đo `duration_ms` để tạo AudioArtifact.
+3. **Final Scheduling:** đặt start/end time theo thời lượng thực, không phát trước comment, không chồng lời, không vượt video; xuất kế hoạch cho Part 2/3.
 
-- SpeechTurn.
-- AudioArtifact.
-- Comment timing.
-- RunManifest.
-- Timeline constraints.
+Interface và cách xử lý speech bị loại sau TTS cần nhóm chốt khi triển khai M04–M05. Không dùng giả định "mỗi comment chiếm 12 giây" của runner M01 làm thời lượng speech.
 
-Output:
+## 12.3. Quy tắc bắt buộc
 
-- Kế hoạch phát audio theo thời gian.
-- Thông tin cần thiết để tạo RenderJob.
-- Dữ liệu thời gian cho Timeline Builder.
+- Không phát các SpeechTurn trùng giờ và không cắt ngang lời thoại không có điểm ngắt hợp lệ.
+- Không phát trả lời trước thời điểm comment xuất hiện.
+- Không vượt độ dài video nền; kiểm tra liên kết RunManifest/video timeline.
+- Không phát câu trả lời bị blocked hoặc script chưa approved.
+- Ưu tiên speech và fairness là chính sách lịch phát, không dùng trực tiếp `CommentDecision.priority_score` như thời lượng hoặc điểm xác minh.
+- Mốc business UTC và relative time `ms` phải ánh xạ từ `timeline_start_at` rõ ràng.
 
-## 12.2. Các quy tắc chính
+## 12.4. Ví dụ minh họa (không phải timeline đã chạy)
 
-1. Không cho hai lời thoại phát cùng lúc.
-2. Không phát câu trả lời trước khi comment xuất hiện.
-3. Không ngắt lời giới thiệu giữa câu nếu không có điểm ngắt phù hợp.
-4. Không vượt quá thời lượng video nguồn.
-5. Comment hết hạn không được giữ vô hạn trong hàng đợi.
-6. Những câu trả lời được phát phải khớp Active SKU.
-7. Không lập lịch phát audio chưa được phép phát.
-
-## 12.3. Ví dụ
-
-Video nền dài 60 giây.
-
-- 0–10 giây: Giới thiệu sản phẩm.
-- 12 giây: Comment xuất hiện.
-- 15–19 giây: AI trả lời.
-- 19–30 giây: Tiếp tục giới thiệu.
-- 35 giây: Comment tiếp theo xuất hiện.
-- 38–43 giây: AI trả lời.
-- 43–60 giây: Tiếp tục video nền và nội dung đã lên lịch.
-
-Các mốc này chỉ là ví dụ minh họa, không phải kịch bản cố định.
+Video nguồn dài 120 giây; lời giới thiệu được admission, sau đó comment phù hợp được Agent trả lời, TTS sinh WAV và final scheduler quyết định vị trí phát. Lời thoại không đủ thời gian ở cuối video bị xử lý theo chính sách đã thống nhất, **không kéo dài video hoặc tự nối các clip nguồn rời**.
 
 ---
 
 # 13. PART 2 — TIME-ALIGNED VIDEO LIP-SYNC
 
+
 Đường dẫn:
+
 
 `src/hostra_ai/part2_video_lipsync/`
 
+
 ## 13.1. Mục tiêu
+
 
 Part 2 nhận audio đã được lên lịch và video nền.
 
+
 Hệ thống tạo kết quả lip-sync tại đúng những khung hình cần thiết.
+
 
 Part 2 không chịu trách nhiệm ghép toàn bộ video cuối.
 
+
 ## 13.2. Chức năng từng file
+
 
 | File | Input | Output | Chức năng |
 |---|---|---|---|
@@ -966,11 +940,15 @@ Part 2 không chịu trách nhiệm ghép toàn bộ video cuối.
 | `artifact_validator.py` | VideoArtifact, media file | Validation result | Kiểm tra output |
 | `render_service.py` | RenderJobs | VideoArtifacts | Điều phối các tác vụ render |
 
+
 ## 13.3. License Gate
+
 
 Phải kiểm tra giấy phép trước khi render.
 
+
 Kiểm tra:
+
 
 - Avatar ID.
 - Quyền sử dụng hình ảnh.
@@ -979,32 +957,45 @@ Kiểm tra:
 - Phạm vi sử dụng.
 - Mục đích được phép.
 
+
 Nếu không hợp lệ, hệ thống phải từ chối render.
+
 
 ## 13.4. Frame Mapper
 
+
 Nhận timestamp từ Speech Scheduler.
 
+
 Xác định:
+
 
 - Source start.
 - Target start.
 - Duration.
 - Frame range.
 
+
 Không để kết quả lip-sync bị lệch so với vị trí trên video nền.
+
 
 ## 13.5. Lip-sync Adapter
 
+
 Cung cấp giao diện chung để sử dụng các provider hoặc model khác nhau.
+
 
 Có thể sử dụng GPU local hoặc GPU worker bên ngoài.
 
+
 Output cần được chuẩn hóa thành VideoArtifact.
+
 
 ## 13.6. Artifact Validator
 
+
 Kiểm tra:
+
 
 - File có tồn tại.
 - File đọc được.
@@ -1015,29 +1006,42 @@ Kiểm tra:
 - Metadata thời gian chính xác.
 - Audio/video synchronization theo các phép đo được hỗ trợ.
 
+
 Một file MP4 tồn tại không đồng nghĩa đã render thành công.
+
 
 ## 13.7. Nguyên tắc video nền liên tục
 
+
 Kết quả Part 2 phải được căn chỉnh với các frame gốc.
+
 
 Part 3 chỉ áp dụng phần chỉnh sửa cần thiết tại đúng vị trí.
 
+
 Không dùng phương pháp nối tuần tự các video clip độc lập làm cơ chế dựng cuối.
+
 
 ---
 
+
 # 14. PART 3 — CONTINUOUS VIDEO COMPOSITOR
+
 
 Đường dẫn:
 
+
 `src/hostra_ai/part3_demo_compositor/`
+
 
 ## 14.1. Mục tiêu
 
+
 Part 3 sử dụng video nền và các artifact được tạo trước đó để xuất một video demo liên tục.
 
+
 ## 14.2. Chức năng từng file
+
 
 | File | Input | Output | Chức năng |
 |---|---|---|---|
@@ -1049,11 +1053,15 @@ Part 3 sử dụng video nền và các artifact được tạo trước đó đ
 | `benchmark_collector.py` | Measured metrics | Benchmark data | Thu thập số đo |
 | `teleprompter.py` | SKU, timeline, action cues | Operator cues | Hỗ trợ nhắc thao tác |
 
+
 ## 14.3. Run Manager
+
 
 Khởi tạo và quản lý một lần chạy.
 
+
 RunManifest phải xác định:
+
 
 - Run ID.
 - Video nền.
@@ -1065,24 +1073,33 @@ RunManifest phải xác định:
 - License reference.
 - Output path.
 
+
 RunManifest cần được tạo hoặc xác thực trước các tác vụ phụ thuộc vào thông số video.
+
 
 ## 14.4. Timeline Builder
 
+
 Xây dựng các sự kiện như:
+
 
 - Comment xuất hiện.
 - Lời giới thiệu được phát.
 - Câu trả lời được phát.
 - Cue liên quan sản phẩm nếu cần.
 
+
 TimelineEvent không đại diện cho việc nối cảnh quay.
+
 
 Nó đại diện cho các sự kiện diễn ra trên một video nền duy nhất.
 
+
 ## 14.5. Timeline Validator
 
+
 Kiểm tra:
+
 
 1. Start time nhỏ hơn end time.
 2. Event nằm trong thời lượng video.
@@ -1092,11 +1109,15 @@ Kiểm tra:
 6. SKU nhất quán.
 7. Các khoảng thời gian phát có thể thực thi.
 
+
 Validation giữa nhiều sự kiện phải được xử lý ở cấp timeline tổng thể.
+
 
 ## 14.6. Video Compositor
 
+
 Video Compositor phải:
+
 
 1. Sử dụng base_operator.mp4 làm video hình ảnh chính.
 2. Giữ nguyên timeline của video gốc.
@@ -1106,15 +1127,21 @@ Video Compositor phải:
 6. Đảm bảo đồng bộ âm thanh và hình ảnh.
 7. Xuất video cuối.
 
+
 Output:
+
 
 `hostra_demo.mp4`
 
+
 Không được cắt bỏ những khoảng thời gian không có lời thoại chỉ để nối các đoạn nói lại với nhau.
+
 
 ## 14.7. Audit Service
 
+
 Ghi nhận:
+
 
 - Comment decisions.
 - Verification results.
@@ -1124,11 +1151,15 @@ Ghi nhận:
 - Timeline validation.
 - Final export results.
 
+
 Audit phải cho phép truy vết lỗi nhưng không làm lộ thông tin nhạy cảm.
+
 
 ## 14.8. Benchmark Collector
 
+
 Thu thập:
+
 
 - Agent processing time.
 - TTS processing time.
@@ -1142,41 +1173,56 @@ Thu thập:
 - Tỷ lệ câu trả lời vượt qua verification.
 - Lỗi pipeline.
 
+
 Các chỉ số phải được phân biệt giữa:
+
 
 - Thời gian xử lý offline thực tế.
 - Kết quả benchmark GPU.
 - Mục tiêu realtime tương lai.
 
+
 Không coi thời gian chờ được mô phỏng trong video là latency inference thực tế.
+
 
 ## 14.9. Teleprompter
 
+
 Teleprompter giúp xác định:
+
 
 - SKU đang giới thiệu.
 - Nội dung tiếp theo.
 - Thao tác mong muốn của operator.
 - Trạng thái lời thoại.
 
+
 Trong PoC quay sẵn, module này có thể chỉ quản lý cue theo kịch bản.
+
 
 Điều khiển operator vật lý theo thời gian thực là hướng phát triển sau.
 
+
 ---
+
 
 # 15. `api/` — BACKEND DEMO
 
+
 Đường dẫn:
 
+
 `src/hostra_ai/api/`
+
 
 | File | Chức năng |
 |---|---|
 | `app.py` | Khởi tạo FastAPI application |
 | `routes.py` | Các HTTP endpoint |
 
+
 API phục vụ:
+
 
 - Danh sách run.
 - Trạng thái run.
@@ -1187,13 +1233,18 @@ API phục vụ:
 - Audit summary.
 - Benchmark results.
 
+
 API không tự thực thi business logic của Agent hoặc Video Compositor.
+
 
 Các endpoint nên gọi lại service tương ứng.
 
+
 ---
 
+
 # 16. `web/` — FRONTEND DEMO
+
 
 | File | Công dụng |
 |---|---|
@@ -1201,7 +1252,9 @@ Các endpoint nên gọi lại service tương ứng.
 | `styles.css` | Giao diện và responsive |
 | `app.js` | Logic tương tác và API calls |
 
+
 ## 16.1. Các khu vực giao diện dự kiến
+
 
 1. Video Demo Player.
 2. Product Information.
@@ -1212,339 +1265,233 @@ Các endpoint nên gọi lại service tương ứng.
 7. Audit Summary.
 8. Benchmark Summary.
 
+
 ## 16.2. Quy tắc đồng bộ giao diện
+
 
 Nếu bình luận được hiển thị trong giao diện web thay vì ghi trực tiếp vào MP4, thời gian xuất hiện của comment phải căn chỉnh với thời gian phát video.
 
+
 Giao diện không được tự đặt thời điểm comment khác với timeline đã được tạo.
+
 
 ## 16.3. Giới hạn của demo offline
 
+
 Khi phát một MP4 đã render sẵn, việc nhập comment mới vào giao diện không thể tự động thay đổi khẩu hình của video đã xuất.
+
 
 Muốn hỗ trợ comment mới trong lúc video đang phát sẽ cần pipeline render/streaming tương tác ở giai đoạn tiếp theo.
 
+
 ---
 
+
 # 17. `notebooks/` — MÔI TRƯỜNG GPU
+
 
 | File | Chức năng |
 |---|---|
 | `colab_lipsync_worker.ipynb` | Chạy lip-sync experiments hoặc worker trên Google Colab |
 
+
 Notebook nhận:
+
 
 - Base video hoặc cửa sổ frame nguồn.
 - Audio artifact.
 - RenderJob.
 - Configuration.
 
+
 Output:
+
 
 - Lip-sync artifacts.
 - Render metadata.
 - Thông tin lỗi hoặc kết quả xử lý.
 
+
 Notebook phải tuân thủ cùng data contract với backend.
+
 
 Không tự tạo cấu trúc JSON riêng không tương thích với Pydantic schemas.
 
+
 Môi trường GPU có thể được cài độc lập với môi trường backend.
+
 
 ---
 
+
 # 18. `scripts/` — CÁC LỆNH THỰC THI
 
-| Script | Input | Output | Chức năng |
-|---|---|---|---|
-| `validate_inputs.py` | Input files, config | Validation result | Kiểm tra đầu vào |
-| `run_part1.py` | Scenario, product data | Part 1 artifacts | Chạy Agent/TTS |
-| `prepare_lipsync.py` | Audio, speech schedule | RenderJobs | Chuẩn bị GPU jobs |
-| `import_lipsync.py` | GPU outputs | VideoArtifacts | Import và kiểm tra render |
-| `run_demo.py` | Config và artifacts | Final demo | Điều phối toàn bộ pipeline |
+| Script | Mục tiêu | Trạng thái |
+|---|---|---|
+| `scripts/script_part1/run_milestone01.py` | Demo ingest → triage → queue, drain toàn bộ queue | **Đã chạy local** |
+| `scripts/run_milestone02.py` | M02: load Catalog, FAQ chunks và in Retrieval results | Đề xuất |
+| `scripts/validate_inputs.py` | Kiểm tra dữ liệu và chính sách đầu vào | Theo backlog |
+| `scripts/run_part1.py` | Tạo artifact Part 1 (Agent/TTS) | Theo backlog |
+| `scripts/prepare_lipsync.py` | Chuẩn bị RenderJob | Theo backlog |
+| `scripts/import_lipsync.py` | Import/validate VideoArtifact | Theo backlog |
+| `scripts/run_demo.py` | Điều phối PoC end-to-end | Theo backlog |
 
-## 18.1. Nguyên tắc sử dụng scripts
+## 18.1. Quy tắc chung
 
-Các script chỉ đóng vai trò entry point.
+Scripts chỉ là entry point; business logic ở `src/hostra_ai/`. Không sao chép thuật toán Triage/Queue/Retrieval vào runner. M01 runner tự gắn simulation clock và hiển thị kết quả; không tạo SpeechTurn hoặc file WAV.
 
-Business logic phải nằm trong:
+## 18.2. Lệnh chạy M01 đã kiểm chứng từ môi trường người dùng
 
-`src/hostra_ai/`
+```powershell
+python -m pytest tests/unit/test_part1_code -v
+python -m pytest tests/contract/test_part1_contract.py -v
+python -m pytest -q
+python scripts/script_part1/run_milestone01.py
+```
 
-Không viết lại thuật toán lọc comment, verification hoặc video compositing trong scripts.
+## 18.3. M02 sẽ có hai luồng thực thi
 
-## 18.2. Pipeline tổng thể
+- **Preparation/indexing:** parse Catalog/FAQ, chunk, xây lexical index; sau đó mới tùy chọn embedding/index vector; chỉ cần rebuild khi nguồn hoặc config có thay đổi.
+- **Online retrieval:** query + SKU context → Catalog lookup/FAQ retrieval → ranked evidence; không gọi LLM trong runner M02.
 
-Logic điều phối toàn bộ ứng dụng nằm trong:
+## 18.4. Pipeline tổng thể
 
-`src/hostra_ai/pipeline.py`
-
-Script:
-
-`scripts/run_demo.py`
-
-chỉ gọi lại pipeline và xử lý các tham số chạy.
+`src/hostra_ai/pipeline.py` giữ vai trò điều phối toàn ứng dụng khi đã tích hợp; `scripts/run_demo.py` chỉ gọi pipeline với cấu hình, không thay thế nó.
 
 ---
 
 # 19. `tests/` — HỆ THỐNG KIỂM THỬ
 
-## 19.1. Cấu trúc
+## 19.1. Cấu trúc test phù hợp repository hiện tại
 
 ```text
 tests/
-├── conftest.py
-│
-├── fixtures/
-│   ├── part1/
-│   ├── part2/
-│   └── part3/
-│
 ├── unit/
-│   ├── test_part1.py
+│   ├── test_part1.py                  # Kiểm tra schemas Part 1
 │   ├── test_part2.py
-│   └── test_part3.py
-│
+│   ├── test_part3.py
+│   └── test_part1_code/
+│       ├── test_comment_ingest.py     # M01 đã chạy
+│       ├── test_comment_triage.py     # M01 đã chạy
+│       ├── test_comment_queue.py      # M01 đã chạy
+│       ├── test_catalog_repository.py # M02.1 dự kiến
+│       ├── test_faq_parser.py         # M02.1 dự kiến
+│       ├── test_chunking.py           # M02.1 dự kiến
+│       ├── test_lexical_retriever.py  # M02.2 dự kiến
+│       ├── test_vector_index.py       # M02.3 dự kiến
+│       └── test_ranker.py             # M02.4 dự kiến
 ├── contract/
 │   ├── test_part1_contract.py
 │   ├── test_part2_contract.py
 │   └── test_part3_contract.py
-│
-└── integration/
-    ├── test_part1_pipeline.py
-    ├── test_part2_pipeline.py
-    ├── test_part3_pipeline.py
-    └── test_demo_pipeline.py
+├── integration/
+│   ├── test_comment_processing.py    # Khi cần test M01 end-to-end
+│   ├── test_knowledge_engine.py      # M02 dự kiến
+│   ├── test_part1_pipeline.py
+│   ├── test_part2_pipeline.py
+│   ├── test_part3_pipeline.py
+│   └── test_demo_pipeline.py
+└── fixtures/
+    ├── part1/
+    ├── part2/
+    └── part3/
 ```
+
+Các file `dự kiến` chưa chắc đã tồn tại. Không xóa hoặc di chuyển test M01 chỉ để làm cây đẹp.
 
 ## 19.2. Unit Tests
 
-### test_part1.py
-
-Kiểm tra:
-
-- CommentEvent.
-- CommentDecision.
-- AgentResponse.
-- SpeechTurn.
-- AudioArtifact.
-- Các validator tương ứng.
-
-### test_part2.py
-
-Kiểm tra:
-
-- RenderJob.
-- VideoArtifact.
-- Status validation.
-- Timestamp validation.
-- Artifact metadata.
-
-### test_part3.py
-
-Kiểm tra:
-
-- RunManifest.
-- TimelineEvent.
-- AuditRecord.
-- Các ràng buộc cấp model.
+- **M01:** validation ingest, duplicate window, spam/off-topic, priority, queue admission, TTL, FIFO và fairness.
+- **M02.1:** parse đủ 39 FAQ (10/10/11/8), ID và SKU hợp lệ, multi-SKU compare, Catalog lookup giữ `null`, từ chối tham chiếu không rõ.
+- **M02.2:** câu hỏi/FAQ relevant ID, lexical retrieval regression.
+- **M02.3:** vector shape, top-k, index version, stale index và offline fake embedding provider.
+- **M02.4:** filter SKU, fusion/ranking, evidence traceability và missing data.
+- **M03/M04:** verification, multi-turn memory, blocked/fallback, SpeechTurn và audio file validation.
 
 ## 19.3. Contract Tests
 
-### test_part1_contract.py
-
-Kiểm tra hợp đồng dữ liệu Part 1.
-
-### test_part2_contract.py
-
-Kiểm tra hợp đồng dữ liệu Part 2.
-
-### test_part3_contract.py
-
-Kiểm tra hợp đồng dữ liệu Part 3.
-
-Các test cần xác minh:
-
-- JSON serialization.
-- JSON deserialization.
-- Field types.
-- Required fields.
-- Enum values.
-- Invalid data rejection.
-- Tính tương thích giữa producer và consumer.
+Giữ nguyên test cho 10 public schemas, serialization, required/nullable fields, timestamps, ID reference. M02 internal models không làm thay đổi schema công khai nếu chưa có yêu cầu tích hợp được chốt.
 
 ## 19.4. Integration Tests
 
-### test_part1_pipeline.py
+- M01: replay 20 mock comments deterministic theo event time, không dùng wall-clock.
+- M02: load Catalog + 39 FAQ + retrieval, không phụ thuộc API Key trong baseline.
+- M03–M05: comment → evidence → verified response → speech → artifact; mock các external providers trong CI.
 
-Kiểm tra:
+## 19.5. Kết quả đã ghi nhận (không phải chạy lại trong lần sửa tài liệu)
 
-Comment → Triage → Agent → Verification → SpeechTurn → TTS.
+Theo log từ máy Windows Python 3.13.2: M01 unit 17 passed, Part1 contract 17 passed, full suite **241 passed, 65 subtests passed**. Đây là kết quả kiểm thử **trước thay đổi M02**, không phải tuyên bố M02 đã có bài test đạt.
 
-### test_part2_pipeline.py
-
-Kiểm tra:
-
-RenderJob → License Gate → Lip-sync Adapter → VideoArtifact.
-
-Có thể mock model GPU trong CI.
-
-### test_part3_pipeline.py
-
-Kiểm tra:
-
-RunManifest → Timeline → Validation → Compositor.
-
-### test_demo_pipeline.py
-
-Kiểm tra luồng tổng thể của PoC bằng dữ liệu thử nghiệm và mocked providers khi phù hợp.
-
-## 19.5. Cách tổ chức test trong mỗi file
-
-Các bài test trong cùng file có thể nhóm theo class.
-
-Ví dụ:
-
-- TestCommentEvent.
-- TestCommentDecision.
-- TestAgentResponse.
-- TestSpeechTurn.
-- TestAudioArtifact.
-
-Điều này giúp tập trung test theo Part mà vẫn dễ tìm từng nhóm chức năng.
-
-Nếu file test trở nên quá dài trong tương lai, có thể tách lại theo module.
-
-## 19.6. Chạy test
-
-Chạy toàn bộ:
+## 19.6. Lệnh chạy
 
 ```powershell
+python -m pytest tests/unit/test_part1_code -v
+python -m pytest tests/contract/test_part1_contract.py -v
 python -m pytest -q
+python scripts/script_part1/run_milestone01.py
 ```
 
-Chỉ chạy unit tests:
+## 19.7. Quy tắc regression
 
-```powershell
-python -m pytest tests/unit -q
-```
-
-Chỉ chạy Part 1:
-
-```powershell
-python -m pytest tests/unit/test_part1.py -q
-```
-
-Chỉ chạy contract Part 2:
-
-```powershell
-python -m pytest tests/contract/test_part2_contract.py -q
-```
-
-Chạy integration tests:
-
-```powershell
-python -m pytest tests/integration -q
-```
-
-## 19.7. Quy tắc khi chuyển test cũ
-
-- Giữ nguyên các test case còn hợp lệ.
-- Không xóa assertion chỉ để test pass.
-- Cập nhật các test bị ảnh hưởng bởi thay đổi contract.
-- Chạy regression tests sau khi di chuyển file.
-- Không gộp việc đổi cấu trúc test và đổi business logic vào cùng một thay đổi lớn nếu có thể tách.
+Không sửa/xóa unit/contract tests cũ chỉ để pass; thay đổi schema công khai bắt buộc có review. Không trộn refactor M01 với triển khai M02 trong một PR nếu không có lý do.
 
 ---
 
 # 20. DATA CONTRACT GIỮA CÁC MODULE
 
-| Producer | Consumer | Dữ liệu |
+| Producer | Consumer | Dữ liệu / Ranh giới |
 |---|---|---|
-| Comment Ingest | Comment Triage | CommentEvent |
-| Comment Triage | Comment Queue / Agent | CommentDecision |
-| Comment Queue | Verified Agent | Comment được chọn |
-| Knowledge Engine | Verified Agent | Product evidence |
-| Verified Agent / Verifier | Speech Planner | AgentResponse |
-| Approved Scripts | Speech Planner | Approved script |
-| Speech Planner | TTS Provider | SpeechTurn |
-| TTS Provider | Speech Scheduler | AudioArtifact |
-| Run Manager | Các module cần video metadata | RunManifest |
-| Speech Scheduler | Render Service | Speech schedule |
-| Render Service | Lip-sync Adapter | RenderJob |
-| Lip-sync Adapter | Video Compositor | VideoArtifact |
-| Timeline Builder | Video Compositor | TimelineEvent |
-| Các module | Audit Service | Audit events |
-| Pipeline | Benchmark Collector | Measured metrics |
+| Comment Ingest | Comment Triage | `CommentEvent` |
+| Comment Triage | Comment Queue | `CommentDecision` + CommentEvent |
+| Comment Queue | Orchestration → Verified Agent | `QueueItem` nội bộ; Agent nhận CommentEvent đã được bàn giao kèm context |
+| FAQ Parser / Chunking | Knowledge Retrieval | `FAQChunk` và metadata nội bộ |
+| Catalog Repository | Knowledge Engine | Structured facts, `catalog:<SKU>` |
+| Lexical / Vector Retriever | Ranker / Knowledge Engine | Evidence candidates và retrieval scores |
+| Knowledge Engine (facade) | Verified Agent / Answer Verifier | `RetrievedEvidence` có refs, SKU, version, provenance |
+| Conversation Memory | Verified Agent | Lịch sử theo run_id/viewer_id, tham chiếu SKU nếu có |
+| Verified Agent + Verifier | Speech Planner | `AgentResponse` đã được kiểm chứng |
+| Approved Product Scripts | Speech Planner | Approved script, phải kiểm tra trạng thái duyệt |
+| Speech Planner | Orchestration: Admission | `SpeechTurn` |
+| Orchestration: Admission | TTS Provider | SpeechTurn được phép tổng hợp |
+| TTS Provider | Orchestration: Final Scheduling | `AudioArtifact` và thời lượng WAV thực |
+| Run Manager | Orchestration/Part2/Part3 | `RunManifest` và mốc `timeline_start_at` |
+| Final Scheduling | Part 2 Render Service / Part 3 Timeline | Speech schedule và thời điểm audio |
+| Render Service | Lip-sync Adapter | `RenderJob` |
+| Lip-sync Adapter | Video Compositor | `VideoArtifact` |
+| Timeline Builder | Video Compositor | `TimelineEvent` |
+| Pipeline | Audit / Benchmark | Run events và số đo thực |
 
-## 20.1. Quy tắc liên kết dữ liệu
-
-Mỗi artifact phải có khả năng truy vết thông qua ID.
-
-Ví dụ:
-
-```text
-CommentEvent
-    |
-    v
-CommentDecision
-    |
-    v
-AgentResponse
-    |
-    v
-SpeechTurn
-    |
-    v
-AudioArtifact
-    |
-    v
-RenderJob
-    |
-    v
-VideoArtifact
-    |
-    v
-TimelineEvent
-    |
-    v
-Final Video
-```
-
-Với lời giới thiệu chủ động:
+## 20.1. Traceability
 
 ```text
-Approved Product Script
-    |
-    v
-SpeechTurn
-    |
-    v
-AudioArtifact
-    |
-    v
-RenderJob
-    |
-    v
-VideoArtifact
-    |
-    v
-TimelineEvent
+CommentEvent -> CommentDecision -> (QueueItem delivered)
+  -> [Knowledge Evidence + Conversation Memory]
+  -> AgentResponse (verified) -> SpeechTurn
+  -> AudioArtifact -> RenderJob -> VideoArtifact
+  -> TimelineEvent -> hostra_demo.mp4
 ```
 
-Các ID dùng để liên kết nghiệp vụ.
+**Ngoại lệ:** Product intro không có CommentEvent/AgentResponse bắt buộc; được tạo từ script đã duyệt. Skipped comment chỉ có quyết định, không sinh speech. Evidence refs là dữ liệu nội bộ nhưng khi `AgentResponse.status="answered"`, `evidence_refs` phải chứa nguồn truy vết hợp lệ và được Verifier kiểm tra nội dung hỗ trợ claim.
 
-Tên file chỉ là vị trí lưu dữ liệu, không thay thế cho ID.
+## 20.2. Không nhầm các loại ưu tiên hoặc thời gian
+
+- `priority_score` ở CommentDecision điều khiển ưu tiên Queue, không phải speech priority.
+- `received_at` là UTC nghiệp vụ; video offset tính theo `timeline_start_at`.
+- `QueueItem` được `pop` không đồng nghĩa được phát; Speech Scheduler sử dụng thời lượng WAV thực và giới hạn video.
 
 ---
 
 # 21. QUY TẮC CHỌN LỌC BÌNH LUẬN
 
+
 ## 21.1. Mục tiêu
+
 
 Không xử lý toàn bộ comment khi lưu lượng bình luận tăng cao.
 
+
 Hệ thống phải chọn câu hỏi phù hợp với:
+
 
 - Sản phẩm đang giới thiệu.
 - Nội dung cần được giải đáp.
@@ -1552,7 +1499,9 @@ Hệ thống phải chọn câu hỏi phù hợp với:
 - Thời gian còn lại.
 - Giới hạn xử lý.
 
+
 ## 21.2. Luồng xử lý
+
 
 1. Nhận CommentEvent.
 2. Kiểm tra hợp lệ.
@@ -1563,39 +1512,57 @@ Hệ thống phải chọn câu hỏi phù hợp với:
 7. Đưa comment phù hợp sang Agent.
 8. Lưu CommentDecision và AuditRecord.
 
+
 ## 21.3. Chính sách hàng đợi
+
 
 Hàng đợi cần có giới hạn.
 
+
 Những comment không còn phù hợp sau khi chờ quá lâu có thể được đánh dấu hết hạn.
+
 
 Không để comment cũ của SKU trước tiếp tục được trả lời như thể thuộc SKU hiện tại.
 
+
 Không để một viewer gửi liên tục và chiếm toàn bộ lượt phát biểu.
+
 
 ## 21.4. Phân biệt lựa chọn và trả lời
 
+
 Comment được selected không đồng nghĩa chắc chắn sẽ có câu trả lời phát ra.
+
 
 Agent vẫn phải thực hiện verification.
 
+
 Nếu không đủ bằng chứng hoặc không đáp ứng policy, AgentResponse có thể bị blocked hoặc yêu cầu làm rõ.
+
 
 Những trường hợp này không được tự động gửi TTS.
 
+
 ---
+
 
 # 22. QUY TẮC ĐỒNG BỘ VIDEO VÀ AUDIO
 
+
 ## 22.1. Video nền duy nhất
+
 
 RunManifest xác định video nền.
 
+
 Các RenderJob phải tham chiếu đúng nguồn video của run.
+
 
 ## 22.2. Mốc thời gian
 
+
 Dùng mili giây để biểu diễn:
+
 
 - Comment appearance time.
 - Speech start.
@@ -1604,21 +1571,30 @@ Dùng mili giây để biểu diễn:
 - Render target window.
 - Timeline events.
 
+
 ## 22.3. Không phát chồng audio
+
 
 Hai lời thoại chính không được có khoảng phát trùng nhau.
 
+
 ## 22.4. Không vượt thời lượng video
+
 
 Mọi speech event phải nằm trong thời lượng video nền.
 
+
 Nếu audio không còn đủ thời gian, Scheduler phải xử lý trước khi render.
+
 
 ## 22.5. Giữ tính liên tục
 
+
 Compositor không được loại bỏ các đoạn không có lời thoại.
 
+
 Phải kiểm tra:
+
 
 - Video không bị nhảy cảnh ngoài kịch bản.
 - Chuyển động nền liên tục.
@@ -1627,9 +1603,12 @@ Phải kiểm tra:
 - Audio/video đồng bộ.
 - Điểm chuyển giữa khuôn mặt gốc và khuôn mặt đã chỉnh sửa đủ tự nhiên.
 
+
 ---
 
+
 # 23. `docs/` — TÀI LIỆU DỰ ÁN
+
 
 | File | Chức năng |
 |---|---|
@@ -1641,29 +1620,39 @@ Phải kiểm tra:
 | `benchmark.md` | Phương pháp và kết quả benchmark |
 | `demo_script.md` | Kịch bản trình diễn PoC |
 
+
 ## 23.1. Phân biệt architecture.md và project_structure.md
 
+
 `architecture.md` trả lời:
+
 
 - Hệ thống hoạt động như thế nào?
 - Dữ liệu đi qua những module nào?
 - Các module tương tác ra sao?
 - Cơ chế chọn comment và đồng bộ video hoạt động thế nào?
 
+
 `project_structure.md` trả lời:
+
 
 - File nằm ở đâu?
 - File có chức năng gì?
 - Input và Output của file là gì?
 - Module nào chịu trách nhiệm?
 
+
 Không nên duy trì hai tài liệu có nội dung trùng lặp hoàn toàn.
+
 
 ---
 
+
 # 24. QUY ƯỚC CHUNG
 
+
 ## 24.1. Quy tắc đặt tên
+
 
 - Python modules: snake_case.
 - JSON fields: snake_case.
@@ -1672,15 +1661,21 @@ Không nên duy trì hai tài liệu có nội dung trùng lặp hoàn toàn.
 - Test files: test_*.py.
 - ID: Theo pattern đã thống nhất trong core schemas.
 
+
 ## 24.2. Quy tắc timestamp
+
 
 Timestamp nghiệp vụ sử dụng timezone rõ ràng, ưu tiên UTC.
 
+
 Timestamp tương đối trên video dùng mili giây.
+
 
 Không sử dụng lẫn hai loại thời gian.
 
+
 ## 24.3. Quy tắc artifact
+
 
 - Nhóm output theo run_id.
 - Không ghi đè artifact của run khác.
@@ -1688,7 +1683,9 @@ Không sử dụng lẫn hai loại thời gian.
 - Không dùng tên file làm định danh nghiệp vụ.
 - shared_data/runs/ phải được gitignore.
 
+
 ## 24.4. Quy tắc bảo mật
+
 
 - Không commit secrets.
 - Không lưu video/voice chưa được phép sử dụng.
@@ -1696,7 +1693,9 @@ Không sử dụng lẫn hai loại thời gian.
 - Không sử dụng dữ liệu giả lập như dữ liệu khách hàng thật.
 - Không tự động phát nội dung chưa được kiểm chứng.
 
+
 ## 24.5. Quy tắc phát triển
+
 
 - Một module có trách nhiệm chính rõ ràng.
 - Logic nghiệp vụ nằm trong src/.
@@ -1706,51 +1705,46 @@ Không sử dụng lẫn hai loại thời gian.
 - Mỗi thay đổi contract phải có test.
 - Pull Request cần được review trước khi merge.
 
+
 ---
 
-# 25. THỨ TỰ TRIỂN KHAI ĐỀ XUẤT
 
-| Giai đoạn | Công việc | Kết quả |
+# 25. THỨ TỰ TRIỂN KHAI ĐỀ XUẤT — SAU KHI CÓ M01
+
+| Giai đoạn | Công việc | Trạng thái/đầu ra |
 |---|---|---|
-| 1 | Chốt kiến trúc V2 | Tài liệu cấu trúc và architecture |
-| 2 | Bổ sung 3 schema mới | CommentDecision, SpeechTurn, RunManifest |
-| 3 | Điều chỉnh schema hiện có | AudioArtifact, RenderJob, VideoArtifact, TimelineEvent |
-| 4 | Refactor test theo Part 1/2/3 | Unit và contract tests đạt |
-| 5 | Tạo dữ liệu demo mới | Approved scripts, mock comments, video |
-| 6 | Xây Comment Triage và Queue | CommentDecision |
-| 7 | Xây Verified Agent và TTS | AgentResponse, SpeechTurn, AudioArtifact |
-| 8 | Xây Speech Scheduler | Kế hoạch phát lời thoại |
-| 9 | Thử nghiệm lip-sync trên video nền | VideoArtifact căn chỉnh |
-| 10 | Xây Compositor | hostra_demo.mp4 |
-| 11 | Tích hợp API và Web UI | Demo interface |
-| 12 | Integration, QA, benchmark | Báo cáo kiểm thử |
+| Foundation | 10 public Pydantic contracts, input data, pytest | Đã có các contract tests được chạy local |
+| **M01** | Comment Ingest + Policy + Decisions + Triage + Queue | **Hoàn thành kiểm thử chức năng** (20 comments, 16 handed off ở chế độ drain) |
+| **M02.1** | Catalog Repository + FAQ Parser + Chunking + models nội bộ | Tiếp theo; 2 SKU, 39 FAQ |
+| **M02.2** | Keyword/BM25 baseline + retrieval eval | Chưa triển khai |
+| **M02.3** | Embedding provider + local Vector Index | Chưa triển khai; phụ thuộc lựa chọn model/provider |
+| **M02.4** | Hybrid Routing / Retrieval / Ranking | Chưa triển khai |
+| **M02.5** | Evidence validation, benchmark Recall@K, handoff facade | Chưa triển khai |
+| **M03** | Conversation Memory + Verified Agent + Answer Verifier | Chưa triển khai; cần LLM provider khi tích hợp |
+| **M04** | Speech Planner + TTS + Scheduler admission/final | Chưa triển khai; cần provider hoặc mock TTS |
+| **M05** | Part 1 integration + QA / audit / benchmark | Chưa triển khai |
+| Part 2 | License Gate + Lip-sync overlays căn theo timestamp | Phát triển song song theo contract |
+| Part 3 | Timeline + Compositor cho một video nền liên tục | Phát triển song song theo contract |
+| Demo | API/Web + video thành phẩm + review chất lượng | Chỉ hoàn thành khi có artifact và kiểm thử thực |
 
 ## 25.1. Điểm kiểm tra kỹ thuật sớm
 
-Trước khi tích hợp đầy đủ hệ thống, nhóm cần thử nghiệm:
-
-Một video nền ngắn + một đoạn audio TTS + lip-sync tại đúng timestamp.
-
-Mục tiêu là xác định khả năng tạo khẩu hình tự nhiên mà không làm xuất hiện điểm chuyển cảnh rõ rệt.
-
-Nếu thử nghiệm chưa đạt thì cần xử lý kỹ thuật render trước khi mở rộng toàn bộ pipeline.
+Với Part 2 cần thử nghiệm một đoạn video nền + audio hợp lệ + lip-sync tại timestamp đã chốt để đánh giá độ tự nhiên. Với M02 cần chốt tập câu hỏi đánh giá trước khi chọn Embedding/Ranking; không chọn công nghệ chỉ vì nó phổ biến.
 
 ## 25.2. Phát triển song song
 
-Các module có thể phát triển song song khi contract đã được thống nhất.
-
-Ví dụ:
-
-- Agent/TTS có thể dùng mock SpeechTurn.
-- GPU worker có thể dùng mock RenderJob.
-- Compositor có thể dùng video artifact thử nghiệm.
-- Frontend có thể sử dụng mock API responses.
+- M02.1 và M02.2 không cần OpenAI Key.
+- M03 có thể mock Evidence từ Knowledge Engine để test công cụ/verification.
+- Part 2 có thể dùng mock AudioArtifact/RenderJob, Part 3 mock overlays.
+- API/Web được phát triển dựa trên schema, không yêu cầu video cuối đã render ngay từ đầu.
 
 ---
 
 # 26. DEFINITION OF DONE
 
+
 Một task được xem là hoàn thành khi:
+
 
 1. Chức năng đúng với Acceptance Criteria.
 2. Input/Output tuân thủ data contract.
@@ -1762,9 +1756,12 @@ Một task được xem là hoàn thành khi:
 8. Tài liệu được cập nhật.
 9. Pull Request đã được review và merge.
 
+
 ## 26.1. Definition of Done cho toàn bộ PoC
 
+
 PoC hoàn thành khi có thể chứng minh:
+
 
 - Một video nền liên tục được sử dụng.
 - AI chủ động giới thiệu sản phẩm.
@@ -1779,31 +1776,45 @@ PoC hoàn thành khi có thể chứng minh:
 - Có kết quả benchmark thực tế.
 - Nhóm có thể chạy lại demo theo tài liệu hướng dẫn.
 
+
 ---
+
 
 # 27. KẾT LUẬN
 
-Cấu trúc HOSTRA AI PoC V2 được thiết kế để phục vụ một pipeline Hybrid AI Commerce có khả năng kiểm chứng.
+
+Cấu trúc HOSTRA AI PoC V2.1 được thiết kế để phục vụ một pipeline Hybrid AI Commerce có khả năng kiểm chứng.
+
 
 Hệ thống gồm:
 
+
 **Part 1 — Verified Agent, Comment Triage & TTS**
+
 
 Phụ trách bình luận, quyết định ưu tiên, kiểm chứng nội dung và tạo audio.
 
+
 **Orchestration — Speech Scheduler**
+
 
 Phụ trách thứ tự và thời điểm phát lời thoại.
 
+
 **Part 2 — Time-aligned Video Lip-sync**
+
 
 Phụ trách đồng bộ khẩu hình với âm thanh trên các khung hình của video nền.
 
+
 **Part 3 — Continuous Video Compositor**
+
 
 Phụ trách dựng một video hoàn chỉnh, đồng bộ audio, video, comment và xuất báo cáo.
 
+
 Cấu trúc sử dụng 10 data contracts:
+
 
 1. CommentEvent
 2. CommentDecision
@@ -1816,16 +1827,25 @@ Cấu trúc sử dụng 10 data contracts:
 9. TimelineEvent
 10. AuditRecord
 
+
 Ba nguyên tắc xuyên suốt:
+
 
 **Contract First:** Thiết kế và xác minh hợp đồng dữ liệu trước khi tích hợp.
 
+
 **Continuous Video:** Duy trì một video nền liên tục, chỉ áp dụng các thay đổi cần thiết theo timeline.
+
 
 **Verifiable AI:** Câu trả lời, quyết định chọn lọc, kết quả render và chất lượng đầu ra phải có khả năng kiểm tra, đo lường và truy vết.
 
+
 Mục tiêu của giai đoạn này không phải xây dựng ngay một hệ thống livestream AI thương mại hoàn chỉnh.
+
 
 Mục tiêu là tạo ra một PoC có tính thuyết phục, kiểm chứng được khả năng kết hợp AI Agent, xử lý bình luận, TTS và lip-sync trên một video bán hàng liên tục.
 
+
 Đây là nền tảng để nhóm tiếp tục phát triển MVP và đánh giá khả năng triển khai realtime trong tương lai.
+
+
