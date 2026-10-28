@@ -1,26 +1,61 @@
-"""Independent, conservative verification of candidate answers against evidence."""
+"""
+M03 - Kiểm tra câu trả lời ứng viên trước khi công bố cho người xem.
+
+Đầu vào gồm candidate từ provider, SKU đã phân giải và EvidencePackage của
+Knowledge Engine. Kết quả chỉ là True/False; VerifiedAgent chịu trách nhiệm
+đổi False thành AgentResponse bị chặn và không công bố nội dung ứng viên.
+
+Verifier hiện chỉ hiểu một tập mẫu câu catalog và trích đoạn FAQ giới hạn.
+Nó không chứng minh được nội dung tiếng Việt bất kỳ do LLM tạo ra; câu ngoài
+phạm vi được hỗ trợ sẽ bị từ chối dù có thể đúng. Không xem citation đơn lẻ
+là bằng chứng rằng toàn bộ nội dung câu trả lời đã được kiểm chứng.
+"""
 from dataclasses import dataclass
 import re
 
 from .knowledge.models import EvidencePackage
 
 
+# ============================================================
+# 1. CÂU TRẢ LỜI ỨNG VIÊN - CHƯA PHẢI KẾT QUẢ ĐÃ XÁC MINH
+# ============================================================
+
 @dataclass(frozen=True)
 class CandidateAnswer:
+    """
+    Dữ liệu nội bộ do provider đề xuất, chưa phải AgentResponse hợp lệ.
+
+    ``claimed_sku_ids`` xác định phạm vi sản phẩm; ``cited_evidence_refs``
+    chứa nguồn catalog/FAQ; ``claims`` là các chuỗi phải xuất hiện trong câu.
+    Việc chuỗi claim xuất hiện không tự chứng minh claim đó là đúng.
+    """
     answer_text: str
     claimed_sku_ids: tuple[str, ...]
     cited_evidence_refs: tuple[str, ...]
     claims: tuple[str, ...] = ()
 
 
-class AnswerVerifier:
-    """Verify structured catalog facts and cited FAQ excerpts; reject unknown prose.
+# ============================================================
+# 2. KIỂM TRA EVIDENCE VÀ CÁC MỆNH ĐỀ ĐƯỢC HỖ TRỢ
+# ============================================================
 
-    This intentionally supports a limited grammar: unknown factual assertions cannot
-    be validated reliably by checking only numbers and citations.
+class AnswerVerifier:
+    """
+    Đối chiếu evidence và từng mệnh đề theo các quy tắc xác định, bảo thủ.
+
+    Chỉ chấp nhận khi mọi mệnh đề nằm trong phạm vi kiểm tra hiện có. Cần
+    mở rộng quy tắc và test khi bổ sung cách diễn đạt hoặc loại fact mới.
     """
     def verify(self, candidate: CandidateAnswer, evidence: EvidencePackage,
                resolved_sku_ids: tuple[str, ...], intent: str) -> bool:
+        """
+        Kiểm tra candidate và trả True nếu tất cả điều kiện hiện có đều đạt.
+
+        Yêu cầu catalog đầy đủ cho từng SKU, citation không trùng và FAQ được
+        trích phải có trong package, không mang cờ needs_review. Tham số
+        ``intent`` hiện được giữ trong giao diện nhưng chưa được dùng để kiểm
+        tra sự phù hợp giữa nội dung câu trả lời và câu hỏi.
+        """
         if not isinstance(candidate, CandidateAnswer) or not resolved_sku_ids:
             return False
         if candidate.claimed_sku_ids != resolved_sku_ids or not candidate.answer_text.strip():
@@ -46,7 +81,7 @@ class AnswerVerifier:
             return False
 
         text = candidate.answer_text.strip()
-        # Delimit clauses without splitting decimal separators in prices or model names.
+        # Tách các mệnh đề để kiểm tra riêng; tránh tách dấu chấm trong số.
         clauses = [s.strip(" ,;.") for s in re.split(r"[;\n]|(?<!\d)\.(?=\s|$)", text) if s.strip(" ,;.")]
         if not clauses:
             return False
@@ -57,8 +92,14 @@ class AnswerVerifier:
 
     @staticmethod
     def _check_clause(clause, products, skus, refs, hits):
+        """
+        Kiểm tra một mệnh đề sau chuẩn hóa chữ hoa/thường và khoảng trắng.
+
+        FAQ chỉ đóng góp một số trích đoạn cụ thể. Fact thương mại và thông số
+        được so với catalog theo SKU; các câu khác mặc định bị từ chối.
+        """
         t = " ".join(clause.casefold().split())
-        # Accept refusals only when the entire clause is a refusal, not a mixed claim.
+        # Chỉ chấp nhận mẫu từ chối cam kết đầy đủ; chặn các cam kết chưa hỗ trợ.
         if re.fullmatch(r"(?:em |mình )?chưa thể cam kết (?:số )?fps hoặc (?:số giờ|thời lượng) pin", t):
             return True
         if re.search(r"\bfps\b|\b\d+\s*(?:tiếng|giờ)\b|trả góp|khuyến mãi|freeship|đã (?:lên|chốt|đặt) đơn", t):
@@ -68,8 +109,8 @@ class AnswerVerifier:
             return any(ref in hits and hits[ref].metadata.get('faq_id') == 'FAQ-SALES-005'
                        and t in hits[ref].retrieval_text.replace('**', '').casefold() for ref in refs)
 
-        # FAQ can only contribute verbatim answer excerpts (not the query/title).
-        # Numeric or commercial assertions require independent catalog validation.
+        # Chỉ nhận các trích đoạn FAQ được cho phép và xuất hiện trong phần trả lời.
+        # Số liệu hoặc khẳng định thương mại cần đối chiếu catalog ở bước sau.
         if not re.search(r"\d|\b(?:giá|ram|ssd|pin|oled|ips|bảo hành|nâng cấp|hàng|giảm)\b", t):
             for ref in refs:
                 if ref not in hits:
@@ -85,7 +126,7 @@ class AnswerVerifier:
             name = str(p.get("brand", "")).casefold()
             if not name or not re.search(rf"\b{re.escape(name)}\b", t):
                 continue
-            # Multiple product names in one clause are handled only as a difference.
+            # Mệnh đề chứa hai tên sản phẩm chỉ được xử lý ở nhánh chênh lệch giá.
             if any(other != sku and re.search(rf"\b{re.escape(str(products[other]['brand']).casefold())}\b", t) for other in skus):
                 continue
             price = f"{p['price_vnd']:,}".replace(",", ".")
@@ -95,6 +136,7 @@ class AnswerVerifier:
                 return True
             for field, label in (("ram", "ram"), ("storage", "ssd")):
                 value = p["specifications"][field]["upgradable"]
+                # None là chưa xác nhận, không đồng nghĩa với không nâng cấp được.
                 expected = "chưa xác nhận khả năng nâng cấp" if value is None else "có thể nâng cấp" if value else "không thể nâng cấp"
                 if t == f"{name}: {label} {expected}":
                     return True
