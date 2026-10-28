@@ -153,8 +153,27 @@ def _read_wav(data: bytes):
 
     WAV nén hoặc sample width khác 2 byte hiện không được hỗ trợ; không thể
     khẳng định mọi định dạng audio từ provider đều chuyển đổi được bằng hàm này.
+    WAV streaming có header PCM chuẩn 44 byte và hai kích thước 0xFFFFFFFF
+    được hoàn thiện theo số byte thực nhận trước khi chuyển cho thư viện wave.
     """
     try:
+        # WAV streaming có thể giữ marker kích thước chưa biết sau khi SDK
+        # trả đủ bytes. Chỉ sửa layout PCM này; file khác vẫn kiểm tra nghiêm ngặt.
+        if (isinstance(data, bytes) and len(data) >= 46 and (len(data) - 44) % 2 == 0
+                and data[:4] == b'RIFF' and data[8:16] == b'WAVEfmt '
+                and data[36:40] == b'data'
+                and struct.unpack_from('<I', data, 4)[0] == 0xFFFFFFFF
+                and struct.unpack_from('<I', data, 16)[0] == 16
+                and struct.unpack_from('<H', data, 20)[0] == 1
+                and struct.unpack_from('<I', data, 40)[0] == 0xFFFFFFFF):
+            channels = struct.unpack_from('<H', data, 22)[0]
+            width = struct.unpack_from('<H', data, 34)[0]
+            if channels not in (1, 2) or width != 16 or (len(data) - 44) % (channels * 2):
+                raise ValueError('Invalid streaming PCM frames')
+            patched = bytearray(data)
+            struct.pack_into('<I', patched, 4, len(data) - 8)
+            struct.pack_into('<I', patched, 40, len(data) - 44)
+            data = bytes(patched)
         with wave.open(io.BytesIO(data), 'rb') as wav:
             channels, width, rate, frames = wav.getnchannels(), wav.getsampwidth(), wav.getframerate(), wav.getnframes()
             if wav.getcomptype() != 'NONE' or channels not in (1, 2) or width != 2 or rate < 1 or frames < 1:

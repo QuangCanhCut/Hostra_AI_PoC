@@ -15,6 +15,13 @@ import re
 
 from .knowledge.models import EvidencePackage
 
+_SAFE_FOLLOWUPS = {
+    'price_inquiry': frozenset({'bạn muốn mình tư vấn thêm về cấu hình của mẫu này không ạ?'}),
+    'comparison': frozenset({'bạn muốn tìm hiểu thêm về cấu hình của hai mẫu không ạ?'}),
+    'advisory': frozenset({'bạn ưu tiên màn hình hay khả năng nâng cấp về sau ạ?'}),
+    'spec_inquiry': frozenset({'bạn muốn tìm hiểu thêm về nhu cầu sử dụng nào không ạ?'}),
+}
+
 
 # ============================================================
 # 1. CÂU TRẢ LỜI ỨNG VIÊN - CHƯA PHẢI KẾT QUẢ ĐÃ XÁC MINH
@@ -85,13 +92,15 @@ class AnswerVerifier:
         clauses = [s.strip(" ,;.") for s in re.split(r"[;\n]|(?<!\d)\.(?=\s|$)", text) if s.strip(" ,;.")]
         if not clauses:
             return False
+        if all(' '.join(clause.casefold().split()) in _SAFE_FOLLOWUPS.get(intent, ()) for clause in clauses):
+            return False
         for clause in clauses:
-            if not self._check_clause(clause, products, resolved_sku_ids, refs, hits):
+            if not self._check_clause(clause, products, resolved_sku_ids, refs, hits, intent):
                 return False
         return True
 
     @staticmethod
-    def _check_clause(clause, products, skus, refs, hits):
+    def _check_clause(clause, products, skus, refs, hits, intent):
         """
         Kiểm tra một mệnh đề sau chuẩn hóa chữ hoa/thường và khoảng trắng.
 
@@ -99,6 +108,10 @@ class AnswerVerifier:
         được so với catalog theo SKU; các câu khác mặc định bị từ chối.
         """
         t = " ".join(clause.casefold().split())
+        # These exact conversational sentences contain no product claims.
+        # Any additional wording remains subject to the factual checks below.
+        if t in _SAFE_FOLLOWUPS.get(intent, ()):
+            return True
         # Chỉ chấp nhận mẫu từ chối cam kết đầy đủ; chặn các cam kết chưa hỗ trợ.
         if re.fullmatch(r"(?:em |mình )?chưa thể cam kết (?:số )?fps hoặc (?:số giờ|thời lượng) pin", t):
             return True
@@ -138,20 +151,22 @@ class AnswerVerifier:
                 value = p["specifications"][field]["upgradable"]
                 # None là chưa xác nhận, không đồng nghĩa với không nâng cấp được.
                 expected = "chưa xác nhận khả năng nâng cấp" if value is None else "có thể nâng cấp" if value else "không thể nâng cấp"
-                if t == f"{name}: {label} {expected}":
+                if t in (f"{name}: {label} {expected}", f"về {name}, {label} {expected}"):
                     return True
             display = p["specifications"]["display"]
             if display.get("panel") is not None and t == f"{name}: màn hình {display['panel'].casefold()}, {display['refresh_rate_hz']}hz":
                 return True
+            if display.get("panel") is not None and t == f"{name} có màn hình {display['panel'].casefold()}, tần số quét {display['refresh_rate_hz']}hz":
+                return True
             if display.get("panel") is None and t == f"{name}: chưa xác nhận tấm nền màn hình":
                 return True
-            if t == f"{name}: pin {p['specifications']['battery_wh']}wh":
+            if t in (f"{name}: pin {p['specifications']['battery_wh']}wh", f"{name} có pin {p['specifications']['battery_wh']}wh"):
                 return True
-            if t == f"{name}: ram {p['specifications']['ram']['capacity_gb']}gb":
+            if t in (f"{name}: ram {p['specifications']['ram']['capacity_gb']}gb", f"{name} có ram {p['specifications']['ram']['capacity_gb']}gb"):
                 return True
-            if t == f"{name}: ssd {p['specifications']['storage']['capacity_label'].casefold()}":
+            if t in (f"{name}: ssd {p['specifications']['storage']['capacity_label'].casefold()}", f"{name} có ssd {p['specifications']['storage']['capacity_label'].casefold()}"):
                 return True
-            if t == f"{name}: cpu {p['specifications']['cpu']['model'].casefold()}":
+            if t in (f"{name}: cpu {p['specifications']['cpu']['model'].casefold()}", f"{name} có cpu {p['specifications']['cpu']['model'].casefold()}"):
                 return True
         if len(skus) == 2:
             a, b = (products[sku] for sku in skus)

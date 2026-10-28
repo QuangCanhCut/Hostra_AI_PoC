@@ -104,6 +104,26 @@ def test_resampling_and_wav_rejection():
             normalize_wav(invalid, 16000)
 
 
+def test_openai_streaming_wav_unknown_sizes_are_normalized():
+    original = io.BytesIO()
+    with wave.open(original, 'wb') as wav:
+        wav.setnchannels(1)
+        wav.setsampwidth(2)
+        wav.setframerate(24000)
+        wav.writeframes(struct.pack('<' + 'h' * 2400, *([1000, -1000] * 1200)))
+    streaming = bytearray(original.getvalue())
+    struct.pack_into('<I', streaming, 4, 0xFFFFFFFF)
+    struct.pack_into('<I', streaming, 40, 0xFFFFFFFF)
+    converted = normalize_wav(bytes(streaming), 16000)
+    assert validate_wav(converted, 16000) == 100
+    with wave.open(io.BytesIO(converted), 'rb') as wav:
+        assert wav.getnframes() == 1600
+        assert any(wav.readframes(1600))
+    # A truncated ordinary WAV must not be repaired as if it were streaming.
+    with pytest.raises(TTSError):
+        normalize_wav(original.getvalue()[:-2], 16000)
+
+
 def test_openai_opt_in_and_injected_client():
     calls = []
     class AudioResponse:

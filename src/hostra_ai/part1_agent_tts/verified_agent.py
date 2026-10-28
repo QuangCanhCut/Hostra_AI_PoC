@@ -18,6 +18,8 @@ from pathlib import Path
 from typing import Protocol
 from uuid import uuid4
 
+import yaml
+
 from hostra_ai.core.schemas import AgentResponse, CommentEvent
 from .answer_verifier import AnswerVerifier, CandidateAnswer
 from .conversation_memory import ConversationMemory
@@ -49,7 +51,7 @@ class DeterministicProvider:
     không mang cờ needs_review. Candidate chưa phải câu trả lời đã xác minh.
     """
     def generate(self, query: str, resolved_sku_ids: tuple[str, ...],
-                 intent: str, evidence: EvidencePackage) -> CandidateAnswer:
+                 intent: str, evidence: EvidencePackage, *, context=None) -> CandidateAnswer:
         """Dựng các mệnh đề và refs tương ứng; báo lỗi khi thiếu fact/FAQ cần dùng."""
         products = {item.sku_id: item.value for item in evidence.catalog_evidence if item.field_path is None}
         clauses = []
@@ -59,29 +61,35 @@ class DeterministicProvider:
             specs = p['specifications']
             if intent in ('price_inquiry', 'comparison', 'price_discrepancy'):
                 price = f"{p['price_vnd']:,}".replace(',', '.')
-                clauses.append(f"{name}: {price} đồng trong phiên demo HOSTRA")
+                clauses.append(f"Giá {name} trong phiên demo HOSTRA là {price} đồng")
             elif intent == 'stock_inquiry':
                 clauses.append(f"{name}: {p['stock_quantity']} máy trong phiên demo HOSTRA")
             elif intent in ('upgrade_inquiry', 'advisory'):
                 if intent == 'advisory' and 'chỉnh ảnh' in query.casefold() and specs['display'].get('panel'):
-                    clauses.append(f"{name}: màn hình {specs['display']['panel']}, {specs['display']['refresh_rate_hz']}Hz")
+                    clauses.append(f"{name} có màn hình {specs['display']['panel']}, tần số quét {specs['display']['refresh_rate_hz']}Hz")
                 for field, label in (('ram', 'RAM'), ('storage', 'SSD')):
+                    q = query.casefold()
+                    if intent == 'upgrade_inquiry' and any(term in q for term in ('ram', 'ssd', 'ổ cứng')):
+                        if field == 'ram' and 'ram' not in q:
+                            continue
+                        if field == 'storage' and 'ssd' not in q and 'ổ cứng' not in q:
+                            continue
                     val = specs[field]['upgradable']
                     state = 'chưa xác nhận khả năng nâng cấp' if val is None else 'có thể nâng cấp' if val else 'không thể nâng cấp'
-                    clauses.append(f'{name}: {label} {state}')
+                    clauses.append(f'Về {name}, {label} {state}')
             elif intent == 'spec_inquiry':
                 q = query.casefold()
                 if 'pin' in q:
-                    clauses.append(f"{name}: pin {specs['battery_wh']}Wh")
+                    clauses.append(f"{name} có pin {specs['battery_wh']}Wh")
                 elif 'ram' in q:
-                    clauses.append(f"{name}: RAM {specs['ram']['capacity_gb']}GB")
+                    clauses.append(f"{name} có RAM {specs['ram']['capacity_gb']}GB")
                 elif 'ssd' in q:
-                    clauses.append(f"{name}: SSD {specs['storage']['capacity_label']}")
+                    clauses.append(f"{name} có SSD {specs['storage']['capacity_label']}")
                 elif 'cpu' in q or 'chip' in q:
-                    clauses.append(f"{name}: CPU {specs['cpu']['model']}")
+                    clauses.append(f"{name} có CPU {specs['cpu']['model']}")
                 elif specs['display'].get('panel'):
                     display = specs['display']
-                    clauses.append(f"{name}: màn hình {display['panel']}, {display['refresh_rate_hz']}Hz")
+                    clauses.append(f"{name} có màn hình {display['panel']}, tần số quét {display['refresh_rate_hz']}Hz")
                 else:
                     clauses.append(f'{name}: chưa xác nhận tấm nền màn hình')
             else:
@@ -111,7 +119,98 @@ class DeterministicProvider:
                 raise ValueError('Relevant FAQ excerpt missing')
             clauses.append(excerpt.rstrip('.'))
             refs.append(hit.source_ref)
-        return CandidateAnswer('; '.join(clauses) + '.', resolved_sku_ids, tuple(refs))
+        # Reuse only verified history from this viewer. Prefer new catalog facts
+        # when an advisory answer would repeat all previously spoken statements.
+        history = () if context is None else context.turns
+
+        # Khi khách yêu cầu kết luận hoặc tổng hợp,
+        # không loại bỏ những thông tin đã được kiểm chứng
+        # chỉ vì chúng từng xuất hiện trong hội thoại.
+        is_recap_request = any(
+            term in query.casefold()
+            for term in ('chốt lại', 'nên mua', 'nên chọn')
+        )
+
+        if intent == 'advisory' and history and not is_recap_request:
+            prior = ' '.join(turn.answer.casefold() for turn in history)
+            fresh = [clause for clause in clauses if clause.casefold() not in prior]
+            if not fresh:
+                fresh = [f"{products[sku]['brand']} có RAM {products[sku]['specifications']['ram']['capacity_gb']}GB" for sku in resolved_sku_ids]
+            if 'excerpt' in locals() and excerpt.rstrip('.') not in fresh:
+                refs.remove(hit.source_ref)
+            clauses = fresh
+        # Questions are fixed, claim-free suggestions checked by the verifier.
+        # Avoid repeating the same question within this viewer's memory window.
+        questions = {
+            'price_inquiry': 'Bạn muốn mình tư vấn thêm về cấu hình của mẫu này không ạ?',
+            'comparison': 'Bạn muốn tìm hiểu thêm về cấu hình của hai mẫu không ạ?',
+            'advisory': 'Bạn ưu tiên màn hình hay khả năng nâng cấp về sau ạ?',
+            'spec_inquiry': 'Bạn muốn tìm hiểu thêm về nhu cầu sử dụng nào không ạ?',
+        }
+        question = questions.get(intent)
+        if question and not any(question in turn.answer for turn in history):
+            clauses.append(question)
+        text = '. '.join(part.rstrip('.').strip() for part in clauses)
+        if not text.endswith('?'):
+            text += '.'
+        return CandidateAnswer(text, resolved_sku_ids, tuple(refs))
+
+
+class ExperimentalOpenAISalesProvider:
+    """Optional Responses API candidate generator; output is never trusted by itself."""
+
+    def __init__(self, *, model: str, instructions: str, enabled: bool = False,
+                 timeout_seconds: float = 20, client=None):
+        if not model or not instructions or type(enabled) is not bool or timeout_seconds <= 0:
+            raise ValueError('Invalid experimental sales provider configuration')
+        self.model, self.instructions, self.enabled = model, instructions, enabled
+        self.timeout_seconds, self._client = timeout_seconds, client
+
+    @classmethod
+    def from_files(cls, app_path, persona_path, *, client=None):
+        app = yaml.safe_load(Path(app_path).read_text(encoding='utf-8'))
+        persona = yaml.safe_load(Path(persona_path).read_text(encoding='utf-8'))
+        return cls(model=app['llm']['model'], instructions=persona['instructions'],
+                   enabled=persona['experimental_api_enabled'],
+                   timeout_seconds=persona['timeout_seconds'], client=client)
+
+    def generate(self, query: str, resolved_sku_ids: tuple[str, ...],
+                 intent: str, evidence: EvidencePackage, *, context=None) -> CandidateAnswer:
+        if not self.enabled:
+            raise RuntimeError('EXPERIMENTAL_API_DISABLED')
+        if self._client is None:
+            from openai import OpenAI
+            self._client = OpenAI(base_url='https://api.openai.com/v1',
+                                  timeout=self.timeout_seconds, max_retries=0)
+        plan = DeterministicProvider().generate(query, resolved_sku_ids, intent, evidence, context=context)
+        if not AnswerVerifier().verify(plan, evidence, resolved_sku_ids, intent):
+            raise ValueError('Factual plan did not pass verification')
+        products = {e.sku_id: e.value for e in evidence.catalog_evidence
+                    if e.field_path is None and isinstance(e.value, dict)}
+        facts = {sku: {key: products[sku][key] for key in ('brand', 'model', 'price_vnd',
+                 'stock_quantity', 'specifications')} for sku in resolved_sku_ids}
+        history = [] if context is None else [{'question': t.question, 'answer': t.answer} for t in context.turns]
+        data = {'viewer_question': query, 'intent': intent, 'resolved_sku_ids': resolved_sku_ids,
+                'catalog_facts': facts, 'verified_fact_plan': plan.answer_text,
+                'evidence_refs': plan.cited_evidence_refs, 'recent_context': history,
+                'faq_evidence': [{'ref': h.source_ref, 'text': h.retrieval_text}
+                    for h in evidence.faq_hits if h.metadata.get('needs_review') is False]}
+        try:
+            result = self._client.responses.create(model=self.model, instructions=self.instructions,
+                input=json.dumps(data, ensure_ascii=False), max_output_tokens=500,
+                timeout=self.timeout_seconds)
+            payload = json.loads(result.output_text)
+            if not isinstance(payload, dict) or set(payload) != {'answer_text', 'claimed_sku_ids', 'cited_evidence_refs', 'claims'}:
+                raise ValueError('Invalid candidate fields')
+            if not isinstance(payload['answer_text'], str) or not 1 <= len(payload['answer_text'].strip()) <= 500:
+                raise ValueError('Invalid candidate text')
+            for key in ('claimed_sku_ids', 'cited_evidence_refs', 'claims'):
+                if not isinstance(payload[key], list) or any(not isinstance(x, str) for x in payload[key]):
+                    raise ValueError('Invalid candidate list')
+            return CandidateAnswer(payload['answer_text'], tuple(payload['claimed_sku_ids']),
+                                   tuple(payload['cited_evidence_refs']), tuple(payload['claims']))
+        except Exception:
+            raise RuntimeError('EXPERIMENTAL_PROVIDER_FAILED') from None
 
 
 # ============================================================
@@ -222,7 +321,17 @@ class VerifiedAgent:
         # để provider và verifier đối chiếu các fact được hỗ trợ.
         package = replace(package, catalog_evidence=package.catalog_evidence + facts)
         try:
-            candidate = self.provider.generate(comment.text, skus, intent, package)
+            if isinstance(self.provider, ExperimentalOpenAISalesProvider):
+                try:
+                    candidate = self.provider.generate(comment.text, skus, intent, package, context=context)
+                    if not self.verifier.verify(candidate, package, skus, intent):
+                        raise ValueError('Experimental candidate not verified')
+                except Exception:
+                    candidate = DeterministicProvider().generate(comment.text, skus, intent, package, context=context)
+            elif isinstance(self.provider, DeterministicProvider):
+                candidate = self.provider.generate(comment.text, skus, intent, package, context=context)
+            else:
+                candidate = self.provider.generate(comment.text, skus, intent, package)
             if not isinstance(candidate, CandidateAnswer):
                 return response("blocked", "INTERNAL_ERROR")
             if not self.verifier.verify(candidate, package, skus, intent):
