@@ -1,0 +1,14 @@
+[
+  {"query": "ASUS nâng RAM được không?", "relevant_faq_ids": ["FAQ-ASUS-004"]},
+  {"query": "Lenovo có nâng cấp SSD không?", "relevant_faq_ids": ["FAQ-LENOVO-004"]},
+  {"query": "Máy nào phù hợp học IT và chạy Docker?", "relevant_faq_ids": ["FAQ-COMPARE-005"]},
+  {"query": "ASUS so với Lenovo khác nhau thế nào?", "relevant_faq_ids": ["FAQ-SALES-008"]},
+  {"query": "Giá Lenovo bao nhiêu?", "relevant_faq_ids": ["FAQ-LENOVO-001"]},
+  {"query": "Pin ASUS dùng được mấy tiếng?", "relevant_faq_ids": ["FAQ-ASUS-007"]},
+  {"query": "Lenovo bảo hành bao lâu?", "relevant_faq_ids": ["FAQ-LENOVO-009"]},
+  {"query": "Máy nào có màn hình đẹp hơn?", "relevant_faq_ids": ["FAQ-COMPARE-002"]},
+  {"query": "Có trả góp và freeship không?", "relevant_faq_ids": ["FAQ-SALES-002"]},
+  {"query": "ASUS có card đồ họa rời không?", "relevant_faq_ids": ["FAQ-ASUS-006"]},
+  {"query": "Lenovo có webcam và cổng HDMI không?", "relevant_faq_ids": ["FAQ-LENOVO-008"]},
+  {"query": "Có cam kết FPS khi chơi game không?", "relevant_faq_ids": ["FAQ-SALES-006"]}
+]
