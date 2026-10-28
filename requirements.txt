@@ -1,6 +1,38 @@
-# Data validation & schemas
+
+# ============================================================
+# HOSTRA AI PoC - Python Dependencies
+# ============================================================
+# Python environment: 3.13.x
+#
+# Install:
+#   python -m pip install -r requirements.txt
+#
+# Note:
+#   Keep dependencies within tested major versions.
+# ============================================================
+
+# ------------------------------------------------------------
+# 1. Data Validation & Data Contracts
+# ------------------------------------------------------------
 pydantic>=2.8,<3
+
+# ------------------------------------------------------------
+# 2. Configuration Management
+# ------------------------------------------------------------
 PyYAML>=6.0,<7
 
-# Unit & contract testing
+# Load API keys and environment variables from .env
+python-dotenv>=1.2.4,<2
+
+# ------------------------------------------------------------
+# 3. AI / RAG - OpenAI Embeddings API
+# ------------------------------------------------------------
+# Used by embedding_provider.py
+# Tested with OpenAI Python SDK 2.x
+openai>=2.0,<3
+
+# ------------------------------------------------------------
+# 4. Testing & Quality Assurance
+# ------------------------------------------------------------
+# Unit, contract and integration tests
 pytest>=8.3,<10

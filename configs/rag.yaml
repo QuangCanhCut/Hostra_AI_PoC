@@ -1,0 +1,22 @@
+# Model duy nhất lấy từ configs/app.yaml -> rag.embedding_model.
+# null: dùng dimension mặc định của model, ghi số chiều thực tế vào manifest.
+embedding:
+  provider: openai
+  dimensions: null
+  batch_size: 32
+  timeout_seconds: 30.0
+  max_retries: 1
+
+vector_index:
+  path: shared_data/indexes/rag/index.json
+  metric: cosine
+
+retrieval:
+  default_mode: lexical
+  top_k: 5
+  candidate_k: 20
+  rrf_k: 60
+  # Nhân tối đa 1.05 khi scope SKU rõ và FAQ có đúng tập SKU đó.
+  sku_boost: 0.05
+  # Heuristic từ khóa domain được khai báo trong RetrievalConfig, không phải OOD model.
+  no_hit_policy: domain_terms
